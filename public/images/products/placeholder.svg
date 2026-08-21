@@ -1,0 +1,10 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Product image placeholder">
+  <rect width="800" height="600" fill="#EEF1F5"/>
+  <g stroke="#9AA6B8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M300 210 L500 210 L560 270 L560 400 Q560 410 550 410 L250 410 Q240 410 240 400 L240 270 Z"/>
+    <path d="M240 270 L560 270"/>
+    <path d="M400 210 L400 270"/>
+    <path d="M330 340 L370 300 L410 340"/>
+  </g>
+  <text x="400" y="470" font-family="Inter, system-ui, sans-serif" font-size="26" fill="#7A8699" text-anchor="middle">Product image</text>
+</svg>

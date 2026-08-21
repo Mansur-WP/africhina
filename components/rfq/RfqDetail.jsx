@@ -1,0 +1,591 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import {
+  ArrowLeft,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  FileText,
+  MapPin,
+  Package,
+  CalendarDays,
+  AlertCircle,
+  AlertTriangle,
+  BadgeCheck,
+} from 'lucide-react';
+import { formatMoney } from '@/src/shared/lib/money.js';
+
+const STATUS_META = {
+  open: {
+    label: 'Open — awaiting review',
+    Icon: Clock,
+    className: 'text-amber-700 bg-amber-50 border-amber-200',
+  },
+  quoted: {
+    label: 'Quoted — view your quote below',
+    Icon: FileText,
+    className: 'text-blue-700 bg-blue-50 border-blue-200',
+  },
+  accepted: {
+    label: 'Accepted',
+    Icon: CheckCircle2,
+    className: 'text-green-700 bg-green-50 border-green-200',
+  },
+  closed: {
+    label: 'Closed / Cancelled',
+    Icon: XCircle,
+    className: 'text-gray-600 bg-gray-50 border-gray-200',
+  },
+};
+
+function StatusBadge({ status }) {
+  const meta = STATUS_META[status] ?? STATUS_META.open;
+  const { label, Icon, className } = meta;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${className}`}
+    >
+      <Icon size={13} />
+      {label}
+    </span>
+  );
+}
+
+function formatDate(dateStr) {
+  try {
+    return new Intl.DateTimeFormat('en-NG', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(dateStr));
+  } catch {
+    return dateStr;
+  }
+}
+
+function QuotationCard({ quotation, rfqId, onUpdate }) {
+  const [acting, setActing] = useState(false);
+  const [actionError, setActionError] = useState('');
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+
+  const isExpired =
+    quotation.expiresAt && new Date(quotation.expiresAt) < new Date();
+  const isPending = quotation.status === 'pending';
+  const canAct = isPending && !isExpired;
+
+  async function handleAction(action) {
+    setActing(true);
+    setActionError('');
+    try {
+      const res = await fetch(`/api/v1/quotations/${quotation.id}/${action}`, {
+        method: 'POST',
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setActionError(
+          json.message ?? 'Something went wrong. Please try again.',
+        );
+        setActing(false);
+        return;
+      }
+      onUpdate();
+    } catch {
+      setActionError('A network error occurred. Please try again.');
+      setActing(false);
+    }
+  }
+
+  return (
+    <div
+      suppressHydrationWarning
+      className="overflow-hidden rounded-xl border border-blue-200 bg-blue-50/40"
+    >
+      {/* Header */}
+      <div
+        suppressHydrationWarning
+        className="flex flex-wrap items-center justify-between gap-3 border-b border-blue-100 bg-blue-50 px-5 py-3"
+      >
+        <div suppressHydrationWarning className="flex items-center gap-2">
+          <FileText size={15} className="text-blue-600" />
+          <span className="text-sm font-bold text-blue-900">
+            Quotation Received
+          </span>
+          {quotation.referenceNumber && (
+            <span className="font-mono text-xs text-blue-600">
+              ({quotation.referenceNumber})
+            </span>
+          )}
+        </div>
+        <span
+          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+            quotation.status === 'accepted'
+              ? 'bg-green-100 text-green-700'
+              : quotation.status === 'rejected'
+                ? 'bg-red-100 text-red-700'
+                : isExpired
+                  ? 'bg-gray-100 text-gray-600'
+                  : 'bg-blue-100 text-blue-700'
+          }`}
+        >
+          {quotation.status === 'pending' && isExpired
+            ? 'Expired'
+            : quotation.status}
+        </span>
+      </div>
+
+      <div suppressHydrationWarning className="flex flex-col gap-4 p-5">
+        {/* Price & Delivery */}
+        <div
+          suppressHydrationWarning
+          className="flex flex-wrap items-start justify-between gap-4"
+        >
+          <div suppressHydrationWarning>
+            <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+              Quoted Price
+            </p>
+            <p className="mt-1 text-3xl font-bold text-foreground tabular-nums">
+              {formatMoney(quotation.price, quotation.currency)}
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Total cost incl. shipping
+            </p>
+          </div>
+          <div suppressHydrationWarning className="text-right">
+            <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+              Est. Delivery
+            </p>
+            <p className="mt-1 text-base font-semibold text-foreground">
+              {quotation.deliveryEstimate}
+            </p>
+            {quotation.expiresAt && (
+              <p
+                className={`mt-0.5 text-xs ${isExpired ? 'font-semibold text-red-600' : 'text-muted-foreground'}`}
+              >
+                {isExpired ? 'Expired' : 'Valid until'}:{' '}
+                {formatDate(quotation.expiresAt)}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Notes */}
+        {quotation.notes && (
+          <div
+            suppressHydrationWarning
+            className="rounded-lg border border-border bg-card/80 px-4 py-3"
+          >
+            <p className="mb-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+              Pricing Notes & Terms
+            </p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+              {quotation.notes}
+            </p>
+          </div>
+        )}
+
+        {/* Expired warning */}
+        {isPending && isExpired && (
+          <div
+            suppressHydrationWarning
+            className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+          >
+            <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+            This quotation has expired. Please contact us to request a new
+            quote.
+          </div>
+        )}
+
+        {/* Action error */}
+        {actionError && (
+          <div
+            suppressHydrationWarning
+            className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          >
+            <AlertCircle size={15} className="mt-0.5 shrink-0" />
+            {actionError}
+          </div>
+        )}
+
+        {/* Accepted */}
+        {quotation.status === 'accepted' && (
+          <div
+            suppressHydrationWarning
+            className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
+          >
+            <BadgeCheck size={15} />
+            You accepted this quotation. Your order is being prepared.
+          </div>
+        )}
+
+        {/* Rejected */}
+        {quotation.status === 'rejected' && (
+          <div
+            suppressHydrationWarning
+            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600"
+          >
+            <XCircle size={15} />
+            You declined this quotation. Contact us if you need a revised quote.
+          </div>
+        )}
+
+        {/* Accept / Reject */}
+        {canAct && (
+          <div suppressHydrationWarning className="flex flex-col gap-3">
+            {!showRejectConfirm ? (
+              <div suppressHydrationWarning className="flex flex-wrap gap-3">
+                <button
+                  id="accept-quotation-btn"
+                  onClick={() => handleAction('accept')}
+                  disabled={acting}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
+                >
+                  <CheckCircle2 size={15} />
+                  {acting ? 'Processing…' : 'Accept Quotation'}
+                </button>
+                <button
+                  id="reject-quotation-btn"
+                  onClick={() => setShowRejectConfirm(true)}
+                  disabled={acting}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted disabled:opacity-60"
+                >
+                  <XCircle size={15} />
+                  Decline
+                </button>
+              </div>
+            ) : (
+              <div
+                suppressHydrationWarning
+                className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-4"
+              >
+                <p className="text-sm font-semibold text-foreground">
+                  Are you sure you want to decline this quotation?
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  The request will remain open and our team can send you a
+                  revised quote.
+                </p>
+                <div suppressHydrationWarning className="flex gap-2">
+                  <button
+                    id="confirm-reject-btn"
+                    onClick={() => handleAction('reject')}
+                    disabled={acting}
+                    className="rounded-md bg-destructive px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+                  >
+                    {acting ? 'Processing…' : 'Yes, decline it'}
+                  </button>
+                  <button
+                    onClick={() => setShowRejectConfirm(false)}
+                    disabled={acting}
+                    className="rounded-md border border-border px-4 py-2 text-xs font-semibold text-foreground transition hover:bg-muted"
+                  >
+                    Keep reviewing
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function RfqDetail({ rfq: initialRfq }) {
+  const [rfq, setRfq] = useState(initialRfq);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const canCancel = rfq.status === 'open';
+  const item = rfq.items?.[0] ?? null;
+  const product = item?.product ?? null;
+  const quotations = rfq.quotations ?? [];
+
+  // Most-recent pending or accepted quotation shown prominently
+  const activeQuotation =
+    quotations.find((q) => q.status === 'pending') ??
+    quotations.find((q) => q.status === 'accepted') ??
+    null;
+  const olderQuotations = quotations.filter((q) => q !== activeQuotation);
+
+  async function handleCancel() {
+    setCancelling(true);
+    setCancelError('');
+    try {
+      const res = await fetch(`/api/v1/rfqs/${rfq.id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!res.ok) {
+        setCancelError(
+          json.message || 'Could not cancel this request. Please try again.',
+        );
+        setCancelling(false);
+        return;
+      }
+      setRfq(json.data);
+      setShowConfirm(false);
+    } catch {
+      setCancelError('A network error occurred. Please try again.');
+    } finally {
+      setCancelling(false);
+    }
+  }
+
+  async function refreshRfq() {
+    try {
+      const res = await fetch(`/api/v1/rfqs/${rfq.id}`);
+      const json = await res.json();
+      if (res.ok && json.data) {
+        setRfq(json.data);
+      }
+    } catch {
+      // silently fail — user can refresh manually
+    }
+  }
+
+  return (
+    <div className="flex max-w-2xl flex-col gap-6">
+      {/* Back */}
+      <Link
+        href="/rfq"
+        className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+      >
+        <ArrowLeft size={15} />
+        Back to My Requests
+      </Link>
+
+      {/* Header */}
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-bold text-foreground">
+            {product?.title ?? rfq.title ?? 'Sourcing Request'}
+          </h1>
+          <StatusBadge status={rfq.status} />
+        </div>
+        <p className="font-mono text-xs text-muted-foreground">
+          {rfq.referenceNumber}
+        </p>
+      </div>
+
+      {/* Cancel error */}
+      {cancelError && (
+        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <AlertCircle size={15} className="mt-0.5 shrink-0" />
+          {cancelError}
+        </div>
+      )}
+
+      {/* Active Quotation */}
+      {activeQuotation && (
+        <QuotationCard
+          key={activeQuotation.id}
+          quotation={activeQuotation}
+          rfqId={rfq.id}
+          onUpdate={refreshRfq}
+        />
+      )}
+
+      {/* Product card */}
+      {product ? (
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex gap-4 p-5">
+            {product.image && (
+              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-border">
+                <Image
+                  src={product.image.url}
+                  alt={product.image.alt || product.title}
+                  fill
+                  className="object-cover"
+                  sizes="80px"
+                />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                {product.category?.name ?? 'Product'}
+              </p>
+              <p className="mt-0.5 font-semibold text-foreground">
+                {product.title}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+                Indicative price: {formatMoney(product.price, product.currency)}
+              </p>
+              <Link
+                href={`/catalogue/${product.id}`}
+                className="mt-1 inline-block text-xs text-primary hover:underline"
+              >
+                View in catalogue →
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : rfq.title ? (
+        <div className="rounded-xl border border-border bg-card p-5">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Product description
+          </p>
+          <p className="mt-1 font-semibold text-foreground">{rfq.title}</p>
+        </div>
+      ) : null}
+
+      {/* Details grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
+          <Package
+            size={18}
+            className="mt-0.5 shrink-0 text-muted-foreground"
+          />
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">
+              Quantity requested
+            </p>
+            <p className="mt-0.5 text-sm font-semibold text-foreground tabular-nums">
+              {item?.quantity?.toLocaleString() ?? '—'} units
+            </p>
+          </div>
+        </div>
+        <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
+          <MapPin size={18} className="mt-0.5 shrink-0 text-muted-foreground" />
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">
+              Destination
+            </p>
+            <p className="mt-0.5 text-sm font-semibold text-foreground">
+              {rfq.destination}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 sm:col-span-2">
+          <CalendarDays
+            size={18}
+            className="mt-0.5 shrink-0 text-muted-foreground"
+          />
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">
+              Submitted
+            </p>
+            <p className="mt-0.5 text-sm font-semibold text-foreground">
+              {formatDate(rfq.createdAt)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Notes */}
+      {(item?.notes || rfq.description) && (
+        <div className="rounded-xl border border-border bg-card p-5">
+          <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Your requirements
+          </p>
+          <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+            {item?.notes ?? rfq.description}
+          </p>
+        </div>
+      )}
+
+      {/* Older quotations */}
+      {olderQuotations.length > 0 && (
+        <details className="group">
+          <summary className="cursor-pointer list-none text-sm text-muted-foreground transition hover:text-foreground">
+            <span className="underline underline-offset-2">
+              View {olderQuotations.length} earlier quotation
+              {olderQuotations.length !== 1 ? 's' : ''}
+            </span>
+          </summary>
+          <div className="mt-3 flex flex-col gap-3">
+            {olderQuotations.map((q) => (
+              <QuotationCard
+                key={q.id}
+                quotation={q}
+                rfqId={rfq.id}
+                onUpdate={refreshRfq}
+              />
+            ))}
+          </div>
+        </details>
+      )}
+
+      {/* What happens next */}
+      <div className="rounded-xl border border-border bg-muted/30 p-5">
+        <h2 className="text-sm font-semibold text-foreground">
+          What happens next?
+        </h2>
+        {rfq.status === 'open' && (
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Our team at Africhina Connect will review your sourcing request and
+            contact you to confirm requirements and pricing. This typically
+            takes 1–3 business days.
+          </p>
+        )}
+        {rfq.status === 'quoted' && (
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            A quotation has been prepared for you above. Review the pricing and
+            delivery estimate, then accept or decline.
+          </p>
+        )}
+        {rfq.status === 'accepted' && (
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Your quotation has been accepted. Your order is being prepared. You
+            will receive a confirmation with payment instructions.
+          </p>
+        )}
+        {rfq.status === 'closed' && (
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            This request has been closed. If you still need this product, you
+            can submit a new sourcing request.
+          </p>
+        )}
+      </div>
+
+      {/* Cancel action */}
+      {canCancel && (
+        <div className="border-t border-border pt-4">
+          {!showConfirm ? (
+            <button
+              onClick={() => setShowConfirm(true)}
+              className="text-sm text-destructive transition hover:underline"
+            >
+              Cancel this request
+            </button>
+          ) : (
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+              <p className="text-sm font-medium text-foreground">
+                Are you sure you want to cancel this request?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelling}
+                  className="rounded-md bg-destructive px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+                >
+                  {cancelling ? 'Cancelling…' : 'Yes, cancel'}
+                </button>
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  disabled={cancelling}
+                  className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                >
+                  Keep it
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* New request CTA */}
+      {(rfq.status === 'closed' || rfq.status === 'accepted') && (
+        <Link
+          href="/rfq/new"
+          className="inline-flex w-fit items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+        >
+          Submit a new request
+        </Link>
+      )}
+    </div>
+  );
+}
