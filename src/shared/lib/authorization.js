@@ -107,6 +107,11 @@ export function getAuthorizationPolicy(pathname) {
 
   const pagePolicies = {
     '/dashboard': { type: 'page', authRequired: true, allowRoles: ['buyer'] },
+    '/quotations': {
+      type: 'page',
+      authRequired: true,
+      allowRoles: ['buyer'],
+    },
     '/logistics': {
       type: 'page',
       authRequired: true,

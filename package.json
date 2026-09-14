@@ -10,7 +10,7 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "node --test ./test/auth.test.mjs ./test/product.test.mjs ./test/rfq.test.mjs ./test/quotation.test.mjs",
+    "test": "node --test ./test/auth.test.mjs ./test/product.test.mjs ./test/rfq.test.mjs ./test/quotation.test.mjs ./test/quotation-rules.test.mjs ./test/notification.test.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "node prisma/seed.js",

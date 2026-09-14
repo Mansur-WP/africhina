@@ -41,7 +41,7 @@ export async function POST(req, { params }) {
     }
 
     const quotation = await createQuotation(rfqId, parsed.data);
-    return jsonResponse(quotation, 'Quotation sent successfully.', 201);
+    return jsonResponse(quotation, 'Draft quotation created.', 201);
   } catch (error) {
     return errorResponse(
       error.code || 'INTERNAL_ERROR',

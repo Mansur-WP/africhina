@@ -397,7 +397,14 @@ export async function listAllRfqsAdmin({ page = 1, limit = 20, status } = {}) {
       skip,
       take: limit,
       include: {
-        buyer: true,
+        buyer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
         items: {
           take: 1,
           include: {

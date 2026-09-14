@@ -1,10 +1,7 @@
 import { updateProfileSchema } from '@/src/shared/validators/auth.js';
 import { errorResponse, jsonResponse } from '@/src/shared/lib/response.js';
 import { getCurrentUser } from '@/src/infrastructure/auth/sessionManager.js';
-import {
-  getProfile,
-  updateProfile,
-} from '@/src/application/auth/authService.js';
+import { updateProfile } from '@/src/application/auth/authService.js';
 
 export async function GET() {
   try {
@@ -13,8 +10,7 @@ export async function GET() {
       return errorResponse('UNAUTHORIZED', 'Authentication required', 401);
     }
 
-    const profile = await getProfile(user.id);
-    return jsonResponse({ user: profile }, 'Current user loaded', 200);
+    return jsonResponse({ user }, 'Current user loaded', 200);
   } catch (error) {
     return errorResponse(
       error.code || 'INTERNAL_ERROR',

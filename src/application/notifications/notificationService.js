@@ -1,12 +1,19 @@
 import { prisma } from '@/lib/prisma';
+import { buildNotificationWhere } from './notificationQuery.js';
 
 /**
  * Fetch all notifications for a given user ordered by creation date descending.
  */
 export async function getUserNotifications(userId) {
   return await prisma.notification.findMany({
-    where: { userId },
+    where: buildNotificationWhere(userId),
     orderBy: { createdAt: 'desc' },
+  });
+}
+
+export async function getUnreadNotificationCount(userId) {
+  return prisma.notification.count({
+    where: buildNotificationWhere(userId, true),
   });
 }
 

@@ -14,13 +14,12 @@ export default function NotificationBell() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/v1/notifications');
+        const res = await fetch('/api/v1/notifications/unread-count');
         if (!res.ok) {
           throw new Error('Unable to load notifications');
         }
         const payload = await res.json();
-        const items = payload?.data || payload?.notifications || [];
-        const unread = items.filter((n) => !n.read).length;
+        const unread = payload?.data?.unreadCount ?? 0;
         if (mounted) setCount(unread);
       } catch (err) {
         if (mounted) setError(err.message);

@@ -7,7 +7,7 @@ import NotificationBell from './NotificationBell';
 import UserMenu from './UserMenu';
 import { Menu, X } from 'lucide-react';
 
-export default function AppHeader({ user }) {
+export default function AppHeader({ user, showNotifications = true }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -59,6 +59,12 @@ export default function AppHeader({ user }) {
                 >
                   Manage RFQs
                 </Link>
+                <Link
+                  href="/admin/quotations"
+                  className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
+                >
+                  Quotations
+                </Link>
               </>
             ) : (
               <>
@@ -86,12 +92,18 @@ export default function AppHeader({ user }) {
                 >
                   RFQs
                 </Link>
+                <Link
+                  href="/quotations"
+                  className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
+                >
+                  Quotations
+                </Link>
               </>
             )}
           </nav>
 
           <div suppressHydrationWarning className="flex items-center gap-3">
-            <NotificationBell />
+            {showNotifications ? <NotificationBell /> : null}
             <UserMenu user={user} />
           </div>
         </div>
@@ -114,6 +126,12 @@ export default function AppHeader({ user }) {
                   className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
                 >
                   Manage RFQs
+                </Link>
+                <Link
+                  href="/admin/quotations"
+                  className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
+                >
+                  Quotations
                 </Link>
                 <Link
                   href="/profile"
@@ -147,6 +165,12 @@ export default function AppHeader({ user }) {
                   className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
                 >
                   RFQs
+                </Link>
+                <Link
+                  href="/quotations"
+                  className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
+                >
+                  Quotations
                 </Link>
                 <Link
                   href="/support"

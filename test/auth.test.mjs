@@ -132,6 +132,19 @@ describe('Server-side authorization policy', () => {
     assert.strictEqual(canAccessPath(null, '/api/v1/auth/me'), false);
   });
 
+  it('requires authentication for the notification unread-count API', () => {
+    const policy = getAuthorizationPolicy('/api/v1/notifications/unread-count');
+    assert.strictEqual(policy.authRequired, true);
+    assert.strictEqual(
+      canAccessPath(null, '/api/v1/notifications/unread-count'),
+      false,
+    );
+    assert.strictEqual(
+      canAccessPath(buyer, '/api/v1/notifications/unread-count'),
+      true,
+    );
+  });
+
   it('rejects wrong role on protected APIs', () => {
     assert.strictEqual(canAccessPath(buyer, '/api/v1/admin/users'), false);
     assert.strictEqual(canAccessPath(admin, '/api/v1/admin/users'), true);

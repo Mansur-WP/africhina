@@ -1,7 +1,5 @@
 import { Suspense } from 'react';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getCurrentUser } from '@/src/infrastructure/auth/sessionManager.js';
 import AppShell from '@/components/AppShell.jsx';
 import EmptyState from '@/components/EmptyState.jsx';
 import ProductGrid from '@/components/catalogue/ProductGrid.jsx';
@@ -82,7 +80,7 @@ async function CatalogueResults({ query, sort }) {
 }
 
 /**
- * SCR-012 — Authenticated Product Catalogue (/catalogue).
+ * SCR-012 — Public Product Catalogue (/catalogue).
  *
  * Server component: search/filter/sort/pagination state lives in the URL and is
  * read here, then products are queried server-side. Query params are parsed
@@ -90,9 +88,6 @@ async function CatalogueResults({ query, sort }) {
  * page (the API route at /api/v1/products is the strict, validated contract).
  */
 export default async function CataloguePage({ searchParams }) {
-  const user = await getCurrentUser();
-  if (!user) redirect('/login');
-
   const rawParams = (await searchParams) ?? {};
   const parsed = productListQuerySchema.safeParse(rawParams);
   const query = parsed.success
@@ -114,7 +109,7 @@ export default async function CataloguePage({ searchParams }) {
   });
 
   return (
-    <AppShell>
+    <AppShell loadUser={false}>
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6">
         <div>
           <h1 className="text-2xl font-semibold">Product Catalogue</h1>

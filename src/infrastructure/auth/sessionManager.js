@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { cache } from 'react';
 import { prisma } from '../../../lib/prisma.js';
 import { sessionDurationSeconds, sessionCookieName } from '../config/env.js';
 
@@ -105,8 +106,12 @@ export async function getCurrentUserForSessionToken(sessionToken) {
   return sanitizeUser(session.user);
 }
 
-export async function getCurrentUser() {
+export const getSessionToken = cache(async () => {
   const cookieStore = await getCookieStore();
-  const sessionToken = cookieStore?.get(sessionCookieName)?.value;
+  return cookieStore?.get(sessionCookieName)?.value || null;
+});
+
+export const getCurrentUser = cache(async () => {
+  const sessionToken = await getSessionToken();
   return getCurrentUserForSessionToken(sessionToken);
-}
+});

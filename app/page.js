@@ -1,4 +1,7 @@
-import { getCurrentUser } from '@/src/infrastructure/auth/sessionManager.js';
+import {
+  getCurrentUser,
+  getSessionToken,
+} from '@/src/infrastructure/auth/sessionManager.js';
 import LandingHeader from '@/components/landing/LandingHeader.jsx';
 import Hero from '@/components/landing/Hero.jsx';
 import AboutSection from '@/components/landing/AboutSection.jsx';
@@ -17,7 +20,8 @@ import LandingFooter from '@/components/landing/LandingFooter.jsx';
  *   → Platform fit → Join → Final CTA
  */
 export default async function Home() {
-  const user = await getCurrentUser();
+  const sessionToken = await getSessionToken();
+  const user = sessionToken ? await getCurrentUser() : null;
 
   return (
     <>
