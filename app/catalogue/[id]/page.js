@@ -8,6 +8,7 @@ import ProductGallery from '@/components/catalogue/ProductGallery.jsx';
 import AvailabilityBadge from '@/components/catalogue/AvailabilityBadge.jsx';
 import { getActiveProductById } from '@/src/application/products/productService.js';
 import { formatMoney } from '@/src/shared/lib/money.js';
+import AddToCartButton from '@/components/cart/AddToCartButton.jsx';
 
 // Cache the fetch so the page body and generateMetadata share one query.
 const loadProduct = cache((id) => getActiveProductById(id));
@@ -58,7 +59,10 @@ export default async function ProductDetailPage({ params }) {
                 </span>
               ) : null}
               <h1 className="text-2xl font-semibold">{product.title}</h1>
-              <AvailabilityBadge availability={product.availability} />
+              <AvailabilityBadge
+                availability={product.availability}
+                purchaseMode={product.purchaseMode}
+              />
             </div>
 
             <div>
@@ -105,12 +109,16 @@ export default async function ProductDetailPage({ params }) {
             </dl>
 
             <div className="flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center">
-              <Link
-                href={`/rfq/new?productId=${product.id}`}
-                className="hover:bg-brand-hover inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
-              >
-                Request this product
-              </Link>
+              {product.purchaseMode === 'DIRECT_SALE' ? (
+                <AddToCartButton product={product} />
+              ) : (
+                <Link
+                  href={`/rfq/new?productId=${product.id}`}
+                  className="hover:bg-brand-hover inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
+                >
+                  Request this product
+                </Link>
+              )}
               <Link
                 href="/catalogue"
                 className="text-text-secondary hover:text-text-primary inline-flex items-center justify-center px-2 py-2.5 text-sm font-medium"

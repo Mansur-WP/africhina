@@ -11,6 +11,7 @@ export default function Sidebar({ user }) {
   const buyerLinks = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/catalogue', label: 'Products' },
+    { href: '/cart', label: 'Cart' },
     { href: '/rfq', label: 'My Requests' },
     { href: '/quotations', label: 'Quotations' },
     { href: '/orders', label: 'My Orders' },

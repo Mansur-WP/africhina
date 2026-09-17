@@ -1,6 +1,10 @@
 export const appUrl =
   process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 export const resendApiKey = process.env.RESEND_API_KEY;
+export const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
+export const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+export const paystackApiUrl =
+  process.env.PAYSTACK_API_URL || 'https://api.paystack.co';
 export const resendFromEmail =
   process.env.RESEND_FROM_EMAIL || 'no-reply@africhinaconnect.com';
 export const sessionCookieName = 'sessionToken';

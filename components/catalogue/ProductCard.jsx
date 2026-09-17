@@ -54,7 +54,10 @@ export default function ProductCard({ product }) {
             {formatMoney(product.price, product.currency)}
           </span>
           <div className="flex items-center justify-between gap-2">
-            <AvailabilityBadge availability={product.availability} />
+            <AvailabilityBadge
+              availability={product.availability}
+              purchaseMode={product.purchaseMode}
+            />
             <span className="text-xs font-medium text-primary group-hover:underline">
               View details
             </span>

@@ -41,6 +41,25 @@ enum ProductStatus {
   inactive
 }
 
+enum PurchaseMode {
+  DIRECT_SALE
+  SOURCING_REQUIRED
+}
+
+enum PurchaseIntentStatus {
+  ACTIVE
+  CONVERTED
+  EXPIRED
+  CANCELLED
+}
+
+enum StockReservationStatus {
+  NONE
+  ACTIVE
+  COMMITTED
+  RELEASED
+}
+
 enum RFQStatus {
   open
   quoted
@@ -81,6 +100,11 @@ enum PaymentStatus {
   success
   failed
   refunded
+  INITIATED
+  PENDING_PROVIDER
+  VERIFIED
+  FAILED
+  REFUNDED
 }
 
 enum EscrowStatus {
@@ -159,6 +183,8 @@ model User {
   supplier      Supplier? @relation("SupplierUser")
   rfqs          RFQ[]
   shipmentEvents ShipmentEvent[] @relation("UserCreatedShipmentEvents")
+  cart          Cart?
+  purchaseIntents PurchaseIntent[]
 }
 
 model Session {
@@ -246,6 +272,7 @@ model Product {
   currency         Currency     @default(NGN)
   minimumOrderQty  Int?
   stock            Int?
+  purchaseMode     PurchaseMode @default(SOURCING_REQUIRED)
   status           ProductStatus @default(draft)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
@@ -257,6 +284,7 @@ model Product {
   orderItems       OrderItem[]
   rfqItems         RFQItem[]
   reviews          Review[]     @relation("ProductReviews")
+  cartItems        CartItem[]
 
   @@index([supplierId])
   @@index([categoryId])
@@ -310,6 +338,52 @@ model RFQItem {
   @@index([productId])
 }
 
+model Cart {
+  id        String   @id @default(cuid())
+  buyerId   String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  buyer     User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  purchaseIntents PurchaseIntent[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([cartId, productId])
+  @@index([productId])
+}
+
+model PurchaseIntent {
+  id           String              @id @default(cuid())
+  buyerId      String
+  cartId       String?
+  idempotencyKey String?
+  purchaseMode PurchaseMode
+  status       PurchaseIntentStatus @default(ACTIVE)
+  destination  String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  buyer        User                @relation(fields: [buyerId], references: [id], onDelete: Restrict)
+  cart         Cart?               @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  order        Order?
+
+  @@index([buyerId, status])
+  @@index([cartId])
+  @@unique([buyerId, idempotencyKey])
+}
+
 model Quotation {
   id               String         @id @default(cuid())
   referenceNumber  String?        @unique
@@ -349,8 +423,14 @@ model Order {
   id            String      @id @default(cuid())
   orderNumber   String      @unique
   buyerId       String
-  supplierId    String
+  supplierId    String?
   quotationId   String?     @unique
+  purchaseIntentId String?  @unique
+  purchaseMode  PurchaseMode @default(SOURCING_REQUIRED)
+  stockReservationStatus StockReservationStatus @default(NONE)
+  stockReservationExpiresAt DateTime?
+  stockReservationReleasedAt DateTime?
+  stockReservationCommittedAt DateTime?
   status        OrderStatus @default(draft)
   // Totals in minor units
   productCost              Int
@@ -367,8 +447,9 @@ model Order {
   updatedAt     DateTime    @updatedAt
 
   buyer         User        @relation("buyerOrders", fields: [buyerId], references: [id], onDelete: Restrict)
-  supplier      Supplier    @relation("SupplierOrders", fields: [supplierId], references: [id], onDelete: Restrict)
+  supplier      Supplier?   @relation("SupplierOrders", fields: [supplierId], references: [id], onDelete: Restrict)
   quotation     Quotation?  @relation(fields: [quotationId], references: [id], onDelete: SetNull)
+  purchaseIntent PurchaseIntent? @relation(fields: [purchaseIntentId], references: [id], onDelete: SetNull)
   items         OrderItem[]
   payments      Payment[]
   invoice       Invoice?
@@ -386,8 +467,10 @@ model OrderItem {
   id         String   @id @default(cuid())
   orderId    String
   productId  String?
+  productTitle String?
   quantity   Int
   unitPrice  Int      // minor units
+  currency   Currency?
   subtotal   Int
 
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -416,11 +499,17 @@ model Payment {
   id            String         @id @default(cuid())
   orderId       String
   provider      PaymentProvider
-  providerRef   String         @unique
+  providerRef   String?        @unique
+  authorizationUrl String?
+  idempotencyKey String?
+  providerEventId String?      @unique
   amount        Int
   currency      Currency       @default(NGN)
-  status        PaymentStatus  @default(pending)
+  status        PaymentStatus  @default(INITIATED)
   webhookPayload Json?
+  verificationResult Json?
+  verifiedAt    DateTime?
+  failedAt      DateTime?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -429,6 +518,7 @@ model Payment {
 
   @@index([orderId])
   @@index([status])
+  @@unique([orderId, idempotencyKey])
 }
 
 model Invoice {

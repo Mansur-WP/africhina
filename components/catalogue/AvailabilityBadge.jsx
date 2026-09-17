@@ -4,7 +4,7 @@
  * renders it. Wording avoids implying physical Nigerian stock — the platform
  * sources on request.
  */
-export default function AvailabilityBadge({ availability }) {
+export default function AvailabilityBadge({ availability, purchaseMode }) {
   if (!availability) return null;
 
   const isAvailable = availability.code === 'available';
@@ -22,7 +22,11 @@ export default function AvailabilityBadge({ availability }) {
           isAvailable ? 'bg-success' : 'bg-text-muted'
         }`}
       />
-      {availability.label}
+      {purchaseMode === 'DIRECT_SALE'
+        ? 'Available to buy'
+        : purchaseMode === 'SOURCING_REQUIRED'
+          ? 'Available for sourcing'
+          : availability.label}
     </span>
   );
 }

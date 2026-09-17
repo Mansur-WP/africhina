@@ -96,6 +96,12 @@ export default function AppHeader({ user, showNotifications = true }) {
                   Products
                 </Link>
                 <Link
+                  href="/cart"
+                  className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
+                >
+                  Cart
+                </Link>
+                <Link
                   href="/orders"
                   className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
                 >
@@ -168,6 +174,12 @@ export default function AppHeader({ user, showNotifications = true }) {
                   className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
                 >
                   Products
+                </Link>
+                <Link
+                  href="/cart"
+                  className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
+                >
+                  Cart
                 </Link>
                 <Link
                   href="/orders"

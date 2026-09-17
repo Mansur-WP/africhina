@@ -89,6 +89,20 @@ export function getAuthorizationPolicy(pathname) {
       return { type: 'api', authRequired: true, allowRoles: ['buyer'] };
     }
 
+    if (
+      normalizedPath === '/api/v1/cart' ||
+      normalizedPath.startsWith('/api/v1/cart/')
+    ) {
+      return { type: 'api', authRequired: true, allowRoles: ['buyer'] };
+    }
+
+    if (
+      normalizedPath === '/api/v1/payments' ||
+      normalizedPath.startsWith('/api/v1/payments/')
+    ) {
+      return { type: 'api', authRequired: true, allowRoles: ['buyer'] };
+    }
+
     if (normalizedPath.startsWith('/api/v1/admin/')) {
       return { type: 'api', authRequired: true, allowRoles: ['admin'] };
     }
@@ -120,6 +134,7 @@ export function getAuthorizationPolicy(pathname) {
       allowRoles: ['buyer'],
     },
     '/orders': { type: 'page', authRequired: true, allowRoles: ['buyer'] },
+    '/cart': { type: 'page', authRequired: true, allowRoles: ['buyer'] },
     '/checkout': { type: 'page', authRequired: true, allowRoles: ['buyer'] },
     '/logistics': {
       type: 'page',

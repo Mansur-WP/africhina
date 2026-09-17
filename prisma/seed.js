@@ -35,6 +35,8 @@ const productDefs = [
     categorySlug: 'electronics',
     price: 1_850_000,
     minimumOrderQty: 50,
+    purchaseMode: 'DIRECT_SALE',
+    stock: 500,
     status: 'active',
     images: 3,
     description:
@@ -45,6 +47,8 @@ const productDefs = [
     categorySlug: 'electronics',
     price: 2_200_000,
     minimumOrderQty: 30,
+    purchaseMode: 'DIRECT_SALE',
+    stock: 300,
     status: 'active',
     description:
       'High-capacity power bank with USB-C Power Delivery and dual USB-A outputs. Suitable for phones, tablets and small devices.',

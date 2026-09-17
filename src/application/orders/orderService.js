@@ -32,6 +32,8 @@ function toPublicOrder(order) {
     buyerId: order.buyerId,
     supplierId: order.supplierId,
     quotationId: order.quotationId,
+    purchaseIntentId: order.purchaseIntentId,
+    purchaseMode: order.purchaseMode,
     status: order.status,
     paymentStatus: order.status === 'pending_payment' ? 'pending' : null,
     productCost: order.productCost,
@@ -52,6 +54,7 @@ function toPublicOrder(order) {
     items: order.items.map((item) => ({
       id: item.id,
       productId: item.productId,
+      productTitle: item.productTitle,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       subtotal: item.subtotal,
@@ -96,6 +99,7 @@ async function createOrderTransaction(tx, quotation, buyerId) {
       buyerId,
       supplierId: quotation.supplierId,
       quotationId: quotation.id,
+      purchaseMode: 'SOURCING_REQUIRED',
       status: 'draft',
       ...quotationSnapshot(quotation),
       totalAmount: quotation.total,
@@ -108,8 +112,10 @@ async function createOrderTransaction(tx, quotation, buyerId) {
     data: items.map((item) => ({
       orderId: order.id,
       productId: item.productId,
+      productTitle: item.product?.title ?? 'Custom sourcing item',
       quantity: item.quantity || 1,
       unitPrice: Math.floor(productCost / (item.quantity || 1)),
+      currency: quotation.currency,
       subtotal: productCost,
     })),
   });
@@ -151,7 +157,13 @@ export async function createOrderFromAcceptedQuotation(quotationId, buyerId) {
           expiresAt: true,
           rfq: {
             select: {
-              items: { select: { productId: true, quantity: true } },
+              items: {
+                select: {
+                  productId: true,
+                  quantity: true,
+                  product: { select: { title: true } },
+                },
+              },
             },
           },
         },

@@ -70,6 +70,9 @@ export function toPublicProduct(product) {
     currency: product.currency,
     minimumOrderQty: product.minimumOrderQty ?? null,
     status: product.status,
+    purchaseMode: product.purchaseMode,
+    availableQuantity:
+      product.purchaseMode === 'DIRECT_SALE' ? product.stock : null,
     availability: toAvailability(product.status),
     category: toPublicCategory(product.category),
     images: toPublicImages(product.images),
