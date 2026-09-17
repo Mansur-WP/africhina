@@ -20,8 +20,8 @@ export default async function CheckoutPage({ params }) {
             Review your order before proceeding to payment.
           </p>
         </div>
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-          <OrderDetail order={order} />
+        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+          <OrderDetail order={order} isCheckout={true} />
           <CheckoutConfirmation order={order} />
         </div>
       </div>

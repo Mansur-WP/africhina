@@ -73,7 +73,7 @@ export default function CartClient({ initialCart }) {
         throw new Error(
           payload?.error?.message || 'Unable to prepare checkout.',
         );
-      router.push(`/orders/${payload.data.id}`);
+      router.push(`/checkout/${payload.data.id}`);
     } catch (checkoutError) {
       setError(checkoutError.message);
       setCheckoutBusy(false);
@@ -143,7 +143,7 @@ export default function CartClient({ initialCart }) {
           {checkoutBusy ? 'Preparing...' : 'Proceed to checkout'}
         </button>
         <p className="text-xs text-muted-foreground">
-          Payment will be added in the next V2 slice.
+          🔒 Secure Paystack payment on next step.
         </p>
       </aside>
     </div>
