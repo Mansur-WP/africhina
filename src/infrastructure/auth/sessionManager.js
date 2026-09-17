@@ -50,6 +50,7 @@ export async function getSessionByToken(sessionToken) {
     if (
       error?.message?.includes('connection') ||
       error?.message?.includes('TLS') ||
+      error?.message?.includes("Can't reach database server") ||
       error?.code === 'P1001'
     ) {
       try {

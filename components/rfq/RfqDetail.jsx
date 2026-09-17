@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -69,14 +70,15 @@ function formatDate(dateStr) {
 }
 
 function QuotationCard({ quotation, rfqId, onUpdate }) {
+  const router = useRouter();
   const [acting, setActing] = useState(false);
   const [actionError, setActionError] = useState('');
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
 
   const isExpired =
     quotation.expiresAt && new Date(quotation.expiresAt) < new Date();
-  const isPending = quotation.status === 'pending';
-  const canAct = isPending && !isExpired;
+  const isSent = quotation.status === 'sent';
+  const canAct = isSent && !isExpired;
 
   async function handleAction(action) {
     setActing(true);
@@ -93,9 +95,20 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
         setActing(false);
         return;
       }
+      if (action === 'accept' && json.data?.order?.id) {
+        router.push(`/orders/${json.data.order.id}`);
+        return;
+      }
+      if (action === 'accept') {
+        setActionError(
+          'The order was not returned. Please refresh and try again.',
+        );
+        return;
+      }
       onUpdate();
     } catch {
       setActionError('A network error occurred. Please try again.');
+    } finally {
       setActing(false);
     }
   }
@@ -132,7 +145,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
                   : 'bg-blue-100 text-blue-700'
           }`}
         >
-          {quotation.status === 'pending' && isExpired
+          {quotation.status === 'sent' && isExpired
             ? 'Expired'
             : quotation.status}
         </span>
@@ -189,7 +202,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
         )}
 
         {/* Expired warning */}
-        {isPending && isExpired && (
+        {isSent && isExpired && (
           <div
             suppressHydrationWarning
             className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
@@ -306,9 +319,9 @@ export default function RfqDetail({ rfq: initialRfq }) {
   const product = item?.product ?? null;
   const quotations = rfq.quotations ?? [];
 
-  // Most-recent pending or accepted quotation shown prominently
+  // Most-recent sent or accepted quotation shown prominently
   const activeQuotation =
-    quotations.find((q) => q.status === 'pending') ??
+    quotations.find((q) => q.status === 'sent') ??
     quotations.find((q) => q.status === 'accepted') ??
     null;
   const olderQuotations = quotations.filter((q) => q !== activeQuotation);

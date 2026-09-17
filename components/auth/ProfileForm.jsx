@@ -16,21 +16,23 @@ export default function ProfileForm({ initialUser }) {
     setMessage('');
     setIsLoading(true);
 
-    const response = await fetch('/api/v1/auth/me', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, phone, avatarUrl }),
-    });
-
-    const payload = await response.json();
-    setIsLoading(false);
-
-    if (!response.ok) {
-      setError(payload?.error?.message || 'Unable to update profile');
-      return;
+    try {
+      const response = await fetch('/api/v1/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, avatarUrl }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setError(payload?.error?.message || 'Unable to update profile');
+        return;
+      }
+      setMessage('Profile updated successfully');
+    } catch {
+      setError('A network error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-
-    setMessage('Profile updated successfully');
   }
 
   return (

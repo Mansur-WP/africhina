@@ -25,7 +25,11 @@ export default function QuotationActions({ quotation }) {
         );
         return;
       }
-      router.refresh();
+      if (action === 'accept' && payload.data?.order?.id) {
+        router.push(`/orders/${payload.data.order.id}`);
+      } else {
+        router.refresh();
+      }
     } catch {
       setError('A network error occurred.');
     } finally {

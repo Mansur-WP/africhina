@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { createNotification } from '@/src/application/notifications/notificationService.js';
+import { createOrderFromAcceptedQuotation } from '@/src/application/orders/orderService.js';
 import {
   QUOTATION_FINANCIAL_FIELDS,
   calculateQuotationTotal,
@@ -271,31 +272,15 @@ async function getOwnedQuotation(quotationId, buyerId) {
 }
 
 export async function acceptQuotation(quotationId, buyerId) {
-  const quotation = await getOwnedQuotation(quotationId, buyerId);
-  if (quotation.status !== 'sent') {
-    const error = new Error('Only sent quotations can be accepted.');
-    error.code = 'CONFLICT';
-    error.status = 409;
-    throw error;
-  }
-  if (isExpired(quotation)) {
-    const error = new Error(
-      'This quotation has expired and cannot be accepted.',
+  const result = await createOrderFromAcceptedQuotation(quotationId, buyerId);
+  const updated = await getOwnedQuotation(quotationId, buyerId);
+  if (result.acceptedNow) {
+    await notifyAdmins(
+      'Quotation Accepted',
+      `Customer accepted quotation ${updated.referenceNumber}.`,
     );
-    error.code = 'CONFLICT';
-    error.status = 409;
-    throw error;
   }
-  const updated = await prisma.quotation.update({
-    where: { id: quotationId },
-    data: { status: 'accepted', acceptedAt: new Date() },
-    include: quotationInclude(),
-  });
-  await notifyAdmins(
-    'Quotation Accepted',
-    `Customer accepted quotation ${updated.referenceNumber}.`,
-  );
-  return toPublicQuotation(updated);
+  return { quotation: toPublicQuotation(updated), order: result.order };
 }
 
 export async function rejectQuotation(quotationId, buyerId) {
@@ -392,6 +377,15 @@ export async function listAdminQuotations({
       hasPrevPage: page > 1,
     },
   };
+}
+
+export async function getAdminQuotationStats() {
+  const [issued, accepted] = await Promise.all([
+    prisma.quotation.count({ where: { status: 'sent' } }),
+    prisma.quotation.count({ where: { status: 'accepted' } }),
+  ]);
+
+  return { issued, accepted };
 }
 
 export async function getAdminQuotationById(quotationId) {

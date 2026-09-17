@@ -11,11 +11,15 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { listAllRfqsAdmin } from '@/src/application/rfqs/rfqService.js';
+import { getAdminQuotationStats } from '@/src/application/rfqs/quotationService.js';
 
 export const metadata = {
   title: 'Admin Dashboard | Africhina Connect',
   description: 'Manage platform sourcing requests, quotations, and catalog.',
 };
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const STATUS_COLORS = {
   open: 'text-amber-700 bg-amber-50 border-amber-200',
@@ -30,16 +34,12 @@ export default async function AdminPage() {
   if (user.role?.code !== 'admin') redirect('/403');
 
   // Fetch all RFQs for admin metrics
-  const { rfqs: recentRfqs, pagination } = await listAllRfqsAdmin({
-    page: 1,
-    limit: 10,
-  });
+  const [{ rfqs: recentRfqs, pagination }, quotationStats] = await Promise.all([
+    listAllRfqsAdmin({ page: 1, limit: 10 }),
+    getAdminQuotationStats(),
+  ]);
 
   const openCount = recentRfqs.filter((r) => r.status === 'open').length;
-  const quotedCount = recentRfqs.filter((r) => r.status === 'quoted').length;
-  const acceptedCount = recentRfqs.filter(
-    (r) => r.status === 'accepted',
-  ).length;
 
   return (
     <AppShell>
@@ -76,7 +76,7 @@ export default async function AdminPage() {
             },
             {
               label: 'Quotations Issued',
-              value: String(quotedCount),
+              value: String(quotationStats.issued),
               sub: 'Awaiting buyer decision',
               href: '/admin/rfqs?status=quoted',
               Icon: FileText,
@@ -84,7 +84,7 @@ export default async function AdminPage() {
             },
             {
               label: 'Accepted Quotes',
-              value: String(acceptedCount),
+              value: String(quotationStats.accepted),
               sub: 'Ready for order milestone',
               href: '/admin/rfqs?status=accepted',
               Icon: CheckCircle2,
@@ -161,6 +161,38 @@ export default async function AdminPage() {
               </p>
               <p className="text-xs text-muted-foreground">
                 Browse products and category listings
+              </p>
+            </div>
+          </Link>
+          <Link
+            href="/admin/quotations"
+            className="flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-4 transition hover:border-primary/40 hover:shadow-sm"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <FileText size={18} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                View Quotations
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Review customer quotation status
+              </p>
+            </div>
+          </Link>
+          <Link
+            href="/admin/orders"
+            className="flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-4 transition hover:border-primary/40 hover:shadow-sm"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <Package size={18} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                View Orders
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Review customer order state
               </p>
             </div>
           </Link>

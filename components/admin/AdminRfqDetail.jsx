@@ -73,6 +73,7 @@ export default function AdminRfqDetail({ rfq }) {
   const buyer = rfq.buyer ?? {};
 
   const isEligibleForQuote = rfq.status === 'open' || rfq.status === 'quoted';
+  const draftQuotation = rfq.quotations?.find((q) => q.status === 'draft');
 
   return (
     <div suppressHydrationWarning className="flex max-w-4xl flex-col gap-6">
@@ -107,12 +108,16 @@ export default function AdminRfqDetail({ rfq }) {
 
         {isEligibleForQuote && (
           <Link
-            href={`/admin/rfqs/${rfq.id}/quotation`}
+            href={
+              draftQuotation
+                ? `/admin/quotations/${draftQuotation.id}`
+                : `/admin/rfqs/${rfq.id}/quotation`
+            }
             id="create-quote-btn"
             className="inline-flex w-fit items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
           >
             <Plus size={16} />
-            Create Quotation
+            {draftQuotation ? 'Edit Draft Quotation' : 'Create Quotation'}
           </Link>
         )}
       </div>
@@ -266,8 +271,9 @@ export default function AdminRfqDetail({ rfq }) {
             ) : (
               <div suppressHydrationWarning className="divide-y divide-border">
                 {rfq.quotations.map((q) => (
-                  <div
+                  <Link
                     key={q.id}
+                    href={`/admin/quotations/${q.id}`}
                     suppressHydrationWarning
                     className="flex flex-col justify-between gap-4 p-5 transition hover:bg-muted/10 sm:flex-row sm:items-center"
                   >
@@ -316,7 +322,7 @@ export default function AdminRfqDetail({ rfq }) {
                         Est. Delivery: {q.deliveryEstimate}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}

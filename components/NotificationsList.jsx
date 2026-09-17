@@ -6,6 +6,7 @@ export default function NotificationsList() {
   const [items, setItems] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [markingId, setMarkingId] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -72,23 +73,32 @@ export default function NotificationsList() {
               </small>
               {!n.read ? (
                 <button
+                  disabled={markingId === n.id}
                   className="text-xs text-primary"
                   onClick={async () => {
+                    setMarkingId(n.id);
                     try {
-                      await fetch(`/api/v1/notifications/${n.id}/read`, {
-                        method: 'PUT',
-                      });
+                      const response = await fetch(
+                        `/api/v1/notifications/${n.id}/read`,
+                        {
+                          method: 'PUT',
+                        },
+                      );
+                      if (!response.ok)
+                        throw new Error('Unable to mark notification as read.');
                       setItems((cur) =>
                         cur.map((x) =>
                           x.id === n.id ? { ...x, read: true } : x,
                         ),
                       );
                     } catch (err) {
-                      // ignore
+                      setError(err.message);
+                    } finally {
+                      setMarkingId(null);
                     }
                   }}
                 >
-                  Mark read
+                  {markingId === n.id ? 'Marking...' : 'Mark read'}
                 </button>
               ) : null}
             </div>

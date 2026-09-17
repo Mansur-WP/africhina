@@ -337,7 +337,7 @@ model Quotation {
 
   rfq              RFQ            @relation(fields: [rfqId], references: [id], onDelete: Cascade)
   supplier         Supplier       @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  orders           Order[]
+  order            Order?
 
   @@index([rfqId])
   @@index([supplierId])
@@ -350,9 +350,16 @@ model Order {
   orderNumber   String      @unique
   buyerId       String
   supplierId    String
-  quotationId   String?
+  quotationId   String?     @unique
   status        OrderStatus @default(draft)
   // Totals in minor units
+  productCost              Int
+  chinaShippingCost        Int
+  inspectionCost           Int
+  internationalFreightCost Int
+  customsCost              Int
+  serviceFee               Int
+  otherCharges             Int
   totalAmount   Int
   currency      Currency    @default(NGN)
   shippingAddress String?

@@ -12,19 +12,21 @@ export default function LogoutButton() {
     setIsLoading(true);
     setError('');
 
-    const response = await fetch('/api/v1/auth/logout', {
-      method: 'POST',
-    });
-
-    setIsLoading(false);
-
-    if (!response.ok) {
-      const payload = await response.json();
-      setError(payload?.error?.message || 'Unable to log out');
-      return;
+    try {
+      const response = await fetch('/api/v1/auth/logout', {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        const payload = await response.json();
+        setError(payload?.error?.message || 'Unable to log out');
+        return;
+      }
+      router.push('/login');
+    } catch {
+      setError('A network error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-
-    router.push('/login');
   }
 
   return (

@@ -29,7 +29,10 @@ export default function AppHeader({ user, showNotifications = true }) {
             {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
 
-          <Link href="/dashboard" className="inline-flex items-center gap-2.5">
+          <Link
+            href={user?.role?.code === 'admin' ? '/admin' : '/dashboard'}
+            className="inline-flex items-center gap-2.5"
+          >
             <div
               suppressHydrationWarning
               className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-xs font-bold text-white"
@@ -64,6 +67,18 @@ export default function AppHeader({ user, showNotifications = true }) {
                   className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
                 >
                   Quotations
+                </Link>
+                <Link
+                  href="/admin/orders"
+                  className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
+                >
+                  Orders
+                </Link>
+                <Link
+                  href="/admin/orders"
+                  className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
+                >
+                  Orders
                 </Link>
               </>
             ) : (

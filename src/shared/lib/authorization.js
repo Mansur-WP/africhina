@@ -82,6 +82,13 @@ export function getAuthorizationPolicy(pathname) {
       return { type: 'api', authRequired: true, allowRoles: ['buyer'] };
     }
 
+    if (
+      normalizedPath === '/api/v1/orders' ||
+      normalizedPath.startsWith('/api/v1/orders/')
+    ) {
+      return { type: 'api', authRequired: true, allowRoles: ['buyer'] };
+    }
+
     if (normalizedPath.startsWith('/api/v1/admin/')) {
       return { type: 'api', authRequired: true, allowRoles: ['admin'] };
     }
@@ -112,6 +119,8 @@ export function getAuthorizationPolicy(pathname) {
       authRequired: true,
       allowRoles: ['buyer'],
     },
+    '/orders': { type: 'page', authRequired: true, allowRoles: ['buyer'] },
+    '/checkout': { type: 'page', authRequired: true, allowRoles: ['buyer'] },
     '/logistics': {
       type: 'page',
       authRequired: true,
@@ -124,6 +133,14 @@ export function getAuthorizationPolicy(pathname) {
       allowRoles: AUTHENTICATED_ROLES,
     },
   };
+
+  if (normalizedPath.startsWith('/orders/')) {
+    return { type: 'page', authRequired: true, allowRoles: ['buyer'] };
+  }
+
+  if (normalizedPath.startsWith('/checkout/')) {
+    return { type: 'page', authRequired: true, allowRoles: ['buyer'] };
+  }
 
   // /admin and all sub-routes (/admin/rfqs, etc.) are admin-only pages.
   if (normalizedPath === '/admin' || normalizedPath.startsWith('/admin/')) {

@@ -23,6 +23,7 @@ export default function Sidebar({ user }) {
     { href: '/admin', label: 'Dashboard' },
     { href: '/admin/rfqs', label: 'Manage RFQs' },
     { href: '/admin/quotations', label: 'Quotations' },
+    { href: '/admin/orders', label: 'Orders' },
     { href: '/profile', label: 'Profile' },
   ];
 

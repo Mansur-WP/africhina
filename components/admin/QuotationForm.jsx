@@ -228,7 +228,7 @@ export default function QuotationForm({ rfq, quotation = null }) {
             onClick={() => save(true)}
             className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           >
-            Save and Send
+            Save &amp; Send Quotation
           </button>
         </div>
       </form>
