@@ -5,7 +5,7 @@ import RfqList from '@/components/rfq/RfqList.jsx';
 import { listMyRfqs } from '@/src/application/rfqs/rfqService.js';
 
 export const metadata = {
-  title: 'My Requests',
+  title: 'Sourcing Requests',
 };
 
 /**

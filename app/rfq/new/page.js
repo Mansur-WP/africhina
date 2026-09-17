@@ -5,7 +5,7 @@ import RfqForm from '@/components/rfq/RfqForm.jsx';
 import { getActiveProductById } from '@/src/application/products/productService.js';
 
 export const metadata = {
-  title: 'Request a Quote',
+  title: 'Request Custom Sourcing',
 };
 
 /**

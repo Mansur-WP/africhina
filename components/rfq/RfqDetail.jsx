@@ -21,22 +21,22 @@ import { formatMoney } from '@/src/shared/lib/money.js';
 
 const STATUS_META = {
   open: {
-    label: 'Open — awaiting review',
+    label: 'Under Review',
     Icon: Clock,
     className: 'text-amber-700 bg-amber-50 border-amber-200',
   },
   quoted: {
-    label: 'Quoted — view your quote below',
+    label: 'Offer Available',
     Icon: FileText,
     className: 'text-blue-700 bg-blue-50 border-blue-200',
   },
   accepted: {
-    label: 'Accepted',
+    label: 'Offer Accepted',
     Icon: CheckCircle2,
     className: 'text-green-700 bg-green-50 border-green-200',
   },
   closed: {
-    label: 'Closed / Cancelled',
+    label: 'Closed',
     Icon: XCircle,
     className: 'text-gray-600 bg-gray-50 border-gray-200',
   },
@@ -67,6 +67,66 @@ function formatDate(dateStr) {
   } catch {
     return dateStr;
   }
+}
+
+function SourcingStepper({ status }) {
+  const steps = [
+    { key: 'submitted', label: 'Request Submitted' },
+    { key: 'review', label: 'Under Review' },
+    { key: 'offer', label: 'Offer Available' },
+    { key: 'order', label: 'Order & Delivery' },
+  ];
+
+  let currentStepIdx = 0;
+  if (status === 'open') currentStepIdx = 1;
+  else if (status === 'quoted') currentStepIdx = 2;
+  else if (status === 'accepted') currentStepIdx = 3;
+  else if (status === 'closed') currentStepIdx = 1;
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <p className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+        Sourcing Journey
+      </p>
+      <div className="grid grid-cols-4 gap-2">
+        {steps.map((step, idx) => {
+          const isDone = status !== 'closed' && idx < currentStepIdx;
+          const isCurrent = idx === currentStepIdx;
+          return (
+            <div
+              key={step.key}
+              className="flex flex-col items-center text-center"
+            >
+              <div
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition ${
+                  isDone
+                    ? 'bg-green-600 text-white'
+                    : isCurrent
+                      ? status === 'closed'
+                        ? 'bg-gray-400 text-white'
+                        : 'bg-primary text-primary-foreground ring-4 ring-primary/15'
+                      : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {isDone ? '✓' : idx + 1}
+              </div>
+              <p
+                className={`mt-1.5 text-[11px] leading-tight font-medium ${
+                  isCurrent
+                    ? 'font-bold text-foreground'
+                    : isDone
+                      ? 'text-foreground'
+                      : 'text-muted-foreground'
+                }`}
+              >
+                {step.label}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function QuotationCard({ quotation, rfqId, onUpdate }) {
@@ -126,7 +186,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
         <div suppressHydrationWarning className="flex items-center gap-2">
           <FileText size={15} className="text-blue-600" />
           <span className="text-sm font-bold text-blue-900">
-            Sourcing Offer Received
+            Sourcing Offer
           </span>
           {quotation.referenceNumber && (
             <span className="font-mono text-xs text-blue-600">
@@ -145,9 +205,13 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
                   : 'bg-blue-100 text-blue-700'
           }`}
         >
-          {quotation.status === 'sent' && isExpired
-            ? 'Expired'
-            : quotation.status}
+          {quotation.status === 'accepted'
+            ? 'Accepted'
+            : quotation.status === 'rejected'
+              ? 'Declined'
+              : quotation.status === 'sent' && isExpired
+                ? 'Expired'
+                : 'Active Offer'}
         </span>
       </div>
 
@@ -159,13 +223,13 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
         >
           <div suppressHydrationWarning>
             <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-              Quoted Price
+              Total Sourcing Price
             </p>
             <p className="mt-1 text-3xl font-bold text-foreground tabular-nums">
               {formatMoney(quotation.price, quotation.currency)}
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Total cost incl. shipping
+              Total price including procurement & shipping to destination
             </p>
           </div>
           <div suppressHydrationWarning className="text-right">
@@ -173,7 +237,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
               Est. Delivery
             </p>
             <p className="mt-1 text-base font-semibold text-foreground">
-              {quotation.deliveryEstimate}
+              {quotation.deliveryEstimate || 'Standard shipping'}
             </p>
             {quotation.expiresAt && (
               <p
@@ -193,7 +257,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
             className="rounded-lg border border-border bg-card/80 px-4 py-3"
           >
             <p className="mb-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-              Pricing Notes & Terms
+              Pricing Notes & Specifications
             </p>
             <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
               {quotation.notes}
@@ -208,7 +272,8 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
             className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
           >
             <AlertTriangle size={15} className="mt-0.5 shrink-0" />
-            This offer has expired. Please contact us to request a new offer.
+            This offer has expired. Please contact support to request a
+            refreshed offer.
           </div>
         )}
 
@@ -223,14 +288,38 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
           </div>
         )}
 
-        {/* Accepted */}
+        {/* Accepted state + Connected Order Link */}
         {quotation.status === 'accepted' && (
           <div
             suppressHydrationWarning
-            className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
+            className="flex flex-col gap-3 rounded-lg border border-green-200 bg-green-50 p-4"
           >
-            <BadgeCheck size={15} />
-            You accepted this offer. Your order is being prepared.
+            <div className="flex items-center gap-2 text-sm font-semibold text-green-900">
+              <BadgeCheck size={18} className="text-green-600" />
+              <span>Offer Accepted — Order Created</span>
+            </div>
+            <p className="text-xs text-green-800">
+              You accepted this offer. The corresponding order has been
+              generated and is ready for payment and fulfillment.
+            </p>
+            {quotation.order && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-green-200 bg-white px-4 py-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Order Reference
+                  </p>
+                  <p className="font-mono text-sm font-bold text-foreground">
+                    {quotation.order.orderNumber}
+                  </p>
+                </div>
+                <Link
+                  href={`/orders/${quotation.order.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-green-700 px-4 py-2 text-xs font-semibold text-white transition hover:bg-green-800"
+                >
+                  View Order Details →
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
@@ -241,7 +330,8 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
             className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600"
           >
             <XCircle size={15} />
-            You declined this offer. Contact us if you need a revised offer.
+            You declined this offer. You can contact our sourcing team if you
+            would like a revised quote.
           </div>
         )}
 
@@ -257,7 +347,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
                 >
                   <CheckCircle2 size={15} />
-                  {acting ? 'Processing…' : 'Accept Offer'}
+                  {acting ? 'Processing…' : 'Accept Offer & Create Order'}
                 </button>
                 <button
                   id="reject-quotation-btn"
@@ -266,7 +356,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted disabled:opacity-60"
                 >
                   <XCircle size={15} />
-                  Decline
+                  Decline Offer
                 </button>
               </div>
             ) : (
@@ -278,8 +368,8 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
                   Are you sure you want to decline this offer?
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  The request will remain open and our team can send you a
-                  revised offer.
+                  The sourcing request will remain open so our team can provide
+                  a revised offer if needed.
                 </p>
                 <div suppressHydrationWarning className="flex gap-2">
                   <button
@@ -288,7 +378,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
                     disabled={acting}
                     className="rounded-md bg-destructive px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
                   >
-                    {acting ? 'Processing…' : 'Yes, decline it'}
+                    {acting ? 'Processing…' : 'Yes, decline offer'}
                   </button>
                   <button
                     onClick={() => setShowRejectConfirm(false)}
@@ -367,7 +457,7 @@ export default function RfqDetail({ rfq: initialRfq }) {
         className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
       >
         <ArrowLeft size={15} />
-        Back to My Requests
+        Back to Sourcing Requests
       </Link>
 
       {/* Header */}
@@ -383,6 +473,9 @@ export default function RfqDetail({ rfq: initialRfq }) {
         </p>
       </div>
 
+      {/* Sourcing Stepper */}
+      <SourcingStepper status={rfq.status} />
+
       {/* Cancel error */}
       {cancelError && (
         <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -391,7 +484,7 @@ export default function RfqDetail({ rfq: initialRfq }) {
         </div>
       )}
 
-      {/* Active Quotation */}
+      {/* Active Quotation / Offer */}
       {activeQuotation && (
         <QuotationCard
           key={activeQuotation.id}
@@ -418,7 +511,7 @@ export default function RfqDetail({ rfq: initialRfq }) {
             )}
             <div className="min-w-0">
               <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                {product.category?.name ?? 'Product'}
+                {product.category?.name ?? 'Catalogue Product'}
               </p>
               <p className="mt-0.5 font-semibold text-foreground">
                 {product.title}
@@ -438,7 +531,7 @@ export default function RfqDetail({ rfq: initialRfq }) {
       ) : rfq.title ? (
         <div className="rounded-xl border border-border bg-card p-5">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Product description
+            Product Description
           </p>
           <p className="mt-1 font-semibold text-foreground">{rfq.title}</p>
         </div>
@@ -453,7 +546,7 @@ export default function RfqDetail({ rfq: initialRfq }) {
           />
           <div>
             <p className="text-xs font-medium text-muted-foreground">
-              Quantity requested
+              Quantity Requested
             </p>
             <p className="mt-0.5 text-sm font-semibold text-foreground tabular-nums">
               {item?.quantity?.toLocaleString() ?? '—'} units
@@ -478,7 +571,7 @@ export default function RfqDetail({ rfq: initialRfq }) {
           />
           <div>
             <p className="text-xs font-medium text-muted-foreground">
-              Submitted
+              Date Submitted
             </p>
             <p className="mt-0.5 text-sm font-semibold text-foreground">
               {formatDate(rfq.createdAt)}
@@ -487,11 +580,11 @@ export default function RfqDetail({ rfq: initialRfq }) {
         </div>
       </div>
 
-      {/* Notes */}
+      {/* Requirements / Notes */}
       {(item?.notes || rfq.description) && (
         <div className="rounded-xl border border-border bg-card p-5">
           <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Your requirements
+            Your Requirements & Specifications
           </p>
           <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
             {item?.notes ?? rfq.description}
@@ -504,7 +597,7 @@ export default function RfqDetail({ rfq: initialRfq }) {
         <details className="group">
           <summary className="cursor-pointer list-none text-sm text-muted-foreground transition hover:text-foreground">
             <span className="underline underline-offset-2">
-              View {olderQuotations.length} earlier quotation
+              View {olderQuotations.length} earlier offer
               {olderQuotations.length !== 1 ? 's' : ''}
             </span>
           </summary>
@@ -528,27 +621,29 @@ export default function RfqDetail({ rfq: initialRfq }) {
         </h2>
         {rfq.status === 'open' && (
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Our team at Africhina Connect will review your sourcing request and
-            contact you to confirm requirements and pricing. This typically
-            takes 1–3 business days.
+            Our team in China is reviewing your specifications and reaching out
+            to vetted suppliers to secure the best pricing. You will receive an
+            offer here once quotes are ready.
           </p>
         )}
         {rfq.status === 'quoted' && (
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            A quotation has been prepared for you above. Review the pricing and
-            delivery estimate, then accept or decline.
+            A sourcing offer has been prepared for you above. Review the total
+            price and estimated delivery timeline, then click{' '}
+            <strong>Accept Offer</strong> to generate your order.
           </p>
         )}
         {rfq.status === 'accepted' && (
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Your quotation has been accepted. Your order is being prepared. You
-            will receive a confirmation with payment instructions.
+            You have accepted this sourcing offer. Your order is created and
+            ready for payment and fulfillment. Click{' '}
+            <strong>View Order Details</strong> above to track your order.
           </p>
         )}
         {rfq.status === 'closed' && (
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            This request has been closed. If you still need this product, you
-            can submit a new sourcing request.
+            This sourcing request has been closed. If you still need this
+            product sourced, you can submit a new request at any time.
           </p>
         )}
       </div>
@@ -561,12 +656,12 @@ export default function RfqDetail({ rfq: initialRfq }) {
               onClick={() => setShowConfirm(true)}
               className="text-sm text-destructive transition hover:underline"
             >
-              Cancel this request
+              Cancel this sourcing request
             </button>
           ) : (
             <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
               <p className="text-sm font-medium text-foreground">
-                Are you sure you want to cancel this request?
+                Are you sure you want to cancel this sourcing request?
               </p>
               <div className="flex gap-2">
                 <button
@@ -595,7 +690,7 @@ export default function RfqDetail({ rfq: initialRfq }) {
           href="/rfq/new"
           className="inline-flex w-fit items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
         >
-          Submit a new request
+          Submit another sourcing request
         </Link>
       )}
     </div>

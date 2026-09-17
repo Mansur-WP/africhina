@@ -102,6 +102,7 @@ export default function RfqForm({ product }) {
   );
 
   // ── Success state ──────────────────────────────────────────────────────────
+  // ── Success state ──────────────────────────────────────────────────────────
   if (success) {
     return (
       <div
@@ -112,7 +113,7 @@ export default function RfqForm({ product }) {
 
         <div suppressHydrationWarning>
           <h1 className="text-2xl font-bold text-foreground">
-            Your request has been submitted.
+            Your Sourcing Request Has Been Submitted
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Reference:{' '}
@@ -124,16 +125,41 @@ export default function RfqForm({ product }) {
 
         <div
           suppressHydrationWarning
-          className="w-full max-w-sm rounded-lg border border-border bg-card p-5 text-left"
+          className="w-full max-w-md rounded-xl border border-border bg-card p-5 text-left"
         >
           <h2 className="text-sm font-semibold text-foreground">
             What happens next?
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Our team at Africhina Connect will review your sourcing request and
-            get back to you with next steps. You can track the status of your
-            request in your RFQ dashboard.
-          </p>
+          <ol className="mt-3 flex flex-col gap-2.5 text-xs leading-relaxed text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                1
+              </span>
+              <span>
+                <strong>Specification Review:</strong> Our sourcing team reviews
+                your requirements and identifies vetted manufacturers in China.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                2
+              </span>
+              <span>
+                <strong>Offer Received:</strong> You will receive a sourcing
+                offer with confirmed product cost, freight, and estimated
+                delivery timeline.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                3
+              </span>
+              <span>
+                <strong>Accept & Pay:</strong> Review and accept the offer to
+                generate your order and proceed to payment.
+              </span>
+            </li>
+          </ol>
         </div>
 
         <div
@@ -144,13 +170,13 @@ export default function RfqForm({ product }) {
             href={`/rfq/${success.id}`}
             className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
           >
-            View My Request
+            View Sourcing Request
           </Link>
           <Link
             href="/rfq"
             className="inline-flex items-center justify-center rounded-md border border-border px-5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted"
           >
-            All My Requests
+            All Sourcing Requests
           </Link>
           <Link
             href="/catalogue"
@@ -177,9 +203,12 @@ export default function RfqForm({ product }) {
       </div>
 
       <div suppressHydrationWarning>
-        <h1 className="text-2xl font-bold text-foreground">Request a Quote</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          Request Custom Sourcing
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Tell us what you need and we will source it from China for you.
+          Tell us what product you need and our sourcing team in China will find
+          verified suppliers and prepare a detailed offer for you.
         </p>
       </div>
 
@@ -214,7 +243,7 @@ export default function RfqForm({ product }) {
           )}
           <div suppressHydrationWarning className="min-w-0">
             <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Selected product
+              Selected Product for Sourcing
             </p>
             <p className="mt-0.5 truncate text-sm font-semibold text-foreground">
               {product.title}
@@ -244,7 +273,7 @@ export default function RfqForm({ product }) {
             type="text"
             value={productDescription}
             onChange={(e) => setProductDescription(e.target.value)}
-            placeholder="e.g. Wireless Bluetooth Earbuds, USB-C charging cable…"
+            placeholder="e.g. Wireless Bluetooth Earbuds, USB-C fast charger, Solar Inverter 5kVA…"
             required
             maxLength={200}
             className="w-full rounded-lg border border-border px-3 py-2.5 text-sm transition outline-none focus:border-ring"
@@ -263,7 +292,7 @@ export default function RfqForm({ product }) {
           className="text-sm font-semibold text-foreground"
           htmlFor="rfq-quantity"
         >
-          How many do you need? <span className="text-destructive">*</span>
+          Quantity required <span className="text-destructive">*</span>
         </label>
         {product?.minimumOrderQty && (
           <p className="text-xs text-muted-foreground">
@@ -295,7 +324,7 @@ export default function RfqForm({ product }) {
           className="text-sm font-semibold text-foreground"
           htmlFor="rfq-destination"
         >
-          Where should we source / deliver this to?{' '}
+          Delivery destination (Nigeria){' '}
           <span className="text-destructive">*</span>
         </label>
         <input
@@ -303,7 +332,7 @@ export default function RfqForm({ product }) {
           type="text"
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
-          placeholder="e.g. Kano, Nigeria"
+          placeholder="e.g. Lagos, Abuja, Kano, Port Harcourt…"
           required
           maxLength={200}
           className="w-full rounded-lg border border-border px-3 py-2.5 text-sm transition outline-none focus:border-ring"
@@ -319,12 +348,12 @@ export default function RfqForm({ product }) {
           className="text-sm font-semibold text-foreground"
           htmlFor="rfq-notes"
         >
-          Tell us anything important about the product.{' '}
+          Product specifications & requirements{' '}
           <span className="font-normal text-muted-foreground">(optional)</span>
         </label>
         <p className="text-xs text-muted-foreground">
-          For example: preferred colour, size, model, packaging, quality
-          requirements…
+          Include details such as preferred materials, dimensions, packaging,
+          branding/OEM requirements, or certification standards.
         </p>
         <textarea
           id="rfq-notes"
@@ -332,7 +361,7 @@ export default function RfqForm({ product }) {
           onChange={(e) => setNotes(e.target.value)}
           rows={4}
           maxLength={2000}
-          placeholder="e.g. Black colour preferred, with retail packaging. Minimum 1-year warranty."
+          placeholder="e.g. Matte black finish, EU standard plug, customized logo on packaging. Target lead time 30 days."
           className="w-full resize-y rounded-lg border border-border px-3 py-2.5 text-sm transition outline-none focus:border-ring"
         />
         <p className="text-right text-xs text-muted-foreground">
@@ -363,7 +392,9 @@ export default function RfqForm({ product }) {
           disabled={submitting}
           className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {submitting ? 'Submitting…' : 'Submit Request'}
+          {submitting
+            ? 'Submitting Sourcing Request…'
+            : 'Submit Sourcing Request'}
         </button>
         <Link
           href={product ? `/catalogue/${product.id}` : '/catalogue'}

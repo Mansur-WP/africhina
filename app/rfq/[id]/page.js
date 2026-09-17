@@ -7,7 +7,7 @@ import { getMyRfqById } from '@/src/application/rfqs/rfqService.js';
 export async function generateMetadata({ params }) {
   const { id } = await params;
   return {
-    title: `Request ${id.slice(0, 8).toUpperCase()} — My Requests`,
+    title: `Sourcing Request ${id.slice(0, 8).toUpperCase()} — Sourcing Requests`,
   };
 }
 

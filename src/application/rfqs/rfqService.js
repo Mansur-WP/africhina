@@ -271,6 +271,15 @@ export async function getMyRfqById(rfqId, buyerId) {
     },
     include: {
       quotations: {
+        include: {
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              status: true,
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
       },
       items: {
@@ -304,6 +313,13 @@ export async function getMyRfqById(rfqId, buyerId) {
     status: q.status,
     expiresAt: q.expiresAt ? q.expiresAt.toISOString() : null,
     createdAt: q.createdAt.toISOString(),
+    order: q.order
+      ? {
+          id: q.order.id,
+          orderNumber: q.order.orderNumber,
+          status: q.order.status,
+        }
+      : null,
   }));
 
   return pub;

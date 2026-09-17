@@ -13,17 +13,17 @@ import {
 
 const STATUS_META = {
   open: {
-    label: 'Open',
+    label: 'Under Review',
     Icon: Clock,
     className: 'text-amber-700 bg-amber-50 border-amber-200',
   },
   quoted: {
-    label: 'Quoted',
+    label: 'Offer Received',
     Icon: FileText,
     className: 'text-blue-700 bg-blue-50 border-blue-200',
   },
   accepted: {
-    label: 'Accepted',
+    label: 'Offer Accepted',
     Icon: CheckCircle2,
     className: 'text-green-700 bg-green-50 border-green-200',
   },
@@ -136,9 +136,12 @@ export default function RfqList({ initialRfqs, initialPagination }) {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">My Requests</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            Sourcing Requests
+          </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            All your sourcing requests with Africhina Connect.
+            Track your custom product sourcing requests and review supplier
+            offers from China.
           </p>
         </div>
         <Link
@@ -147,7 +150,7 @@ export default function RfqList({ initialRfqs, initialPagination }) {
           className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
         >
           <Plus size={15} />
-          New Request
+          New Sourcing Request
         </Link>
       </div>
 
@@ -187,11 +190,11 @@ export default function RfqList({ initialRfqs, initialPagination }) {
           />
           <div>
             <p className="text-sm font-semibold text-foreground">
-              No requests yet
+              No sourcing requests yet
             </p>
             <p className="mt-1 max-w-xs text-xs text-muted-foreground">
               {activeStatus === 'all'
-                ? 'Submit your first sourcing request to get started.'
+                ? 'Submit a sourcing request for any product you want us to source from China.'
                 : `No ${STATUS_META[activeStatus]?.label.toLowerCase() ?? activeStatus} requests found.`}
             </p>
           </div>
@@ -200,7 +203,7 @@ export default function RfqList({ initialRfqs, initialPagination }) {
             className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
           >
             <Plus size={13} />
-            New Request
+            Submit Sourcing Request
           </Link>
         </div>
       ) : (
