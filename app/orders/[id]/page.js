@@ -4,6 +4,10 @@ import OrderDetail from '@/components/orders/OrderDetail.jsx';
 import { getCurrentUser } from '@/src/infrastructure/auth/sessionManager.js';
 import { getCustomerOrder } from '@/src/application/orders/orderService.js';
 
+export const metadata = {
+  title: 'Order Details — Africhina Connect',
+};
+
 export default async function OrderPage({ params }) {
   const user = await getCurrentUser();
   if (!user) redirect('/login');

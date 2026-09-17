@@ -10,11 +10,38 @@ function orderInclude() {
   return {
     buyer: { select: { id: true, name: true, email: true, phone: true } },
     supplier: { select: { id: true, companyName: true } },
-    quotation: { select: { id: true, referenceNumber: true } },
+    quotation: { select: { id: true, referenceNumber: true, rfqId: true } },
     items: {
       orderBy: { id: 'asc' },
       include: {
-        product: { select: { id: true, title: true, currency: true } },
+        product: {
+          select: {
+            id: true,
+            title: true,
+            currency: true,
+            images: { select: { url: true, alt: true }, take: 1 },
+          },
+        },
+      },
+    },
+    shipments: {
+      select: {
+        id: true,
+        carrier: true,
+        trackingNumber: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        events: {
+          orderBy: { occurredAt: 'desc' },
+          select: {
+            id: true,
+            status: true,
+            description: true,
+            location: true,
+            occurredAt: true,
+          },
+        },
       },
     },
   };
@@ -26,6 +53,23 @@ function orderReference() {
 }
 
 function toPublicOrder(order) {
+  const shipment = order.shipments?.[0]
+    ? {
+        id: order.shipments[0].id,
+        carrier: order.shipments[0].carrier ?? null,
+        trackingNumber: order.shipments[0].trackingNumber ?? null,
+        status: order.shipments[0].status ?? null,
+        createdAt: order.shipments[0].createdAt?.toISOString?.() ?? null,
+        events: (order.shipments[0].events ?? []).map((e) => ({
+          id: e.id,
+          status: e.status,
+          description: e.description,
+          location: e.location,
+          occurredAt: e.occurredAt?.toISOString?.() ?? null,
+        })),
+      }
+    : null;
+
   return {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -51,10 +95,12 @@ function toPublicOrder(order) {
     buyer: order.buyer ?? null,
     supplier: order.supplier ?? null,
     quotation: order.quotation ?? null,
+    shipment,
     items: order.items.map((item) => ({
       id: item.id,
       productId: item.productId,
-      productTitle: item.productTitle,
+      productTitle: item.productTitle || item.product?.title || 'Order item',
+      imageUrl: item.product?.images?.[0]?.url ?? null,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       subtotal: item.subtotal,
