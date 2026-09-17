@@ -126,7 +126,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
         <div suppressHydrationWarning className="flex items-center gap-2">
           <FileText size={15} className="text-blue-600" />
           <span className="text-sm font-bold text-blue-900">
-            Quotation Received
+            Sourcing Offer Received
           </span>
           {quotation.referenceNumber && (
             <span className="font-mono text-xs text-blue-600">
@@ -208,8 +208,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
             className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
           >
             <AlertTriangle size={15} className="mt-0.5 shrink-0" />
-            This quotation has expired. Please contact us to request a new
-            quote.
+            This offer has expired. Please contact us to request a new offer.
           </div>
         )}
 
@@ -231,7 +230,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
             className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
           >
             <BadgeCheck size={15} />
-            You accepted this quotation. Your order is being prepared.
+            You accepted this offer. Your order is being prepared.
           </div>
         )}
 
@@ -242,7 +241,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
             className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600"
           >
             <XCircle size={15} />
-            You declined this quotation. Contact us if you need a revised quote.
+            You declined this offer. Contact us if you need a revised offer.
           </div>
         )}
 
@@ -258,7 +257,7 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
                 >
                   <CheckCircle2 size={15} />
-                  {acting ? 'Processing…' : 'Accept Quotation'}
+                  {acting ? 'Processing…' : 'Accept Offer'}
                 </button>
                 <button
                   id="reject-quotation-btn"
@@ -276,11 +275,11 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
                 className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-4"
               >
                 <p className="text-sm font-semibold text-foreground">
-                  Are you sure you want to decline this quotation?
+                  Are you sure you want to decline this offer?
                 </p>
                 <p className="text-xs text-muted-foreground">
                   The request will remain open and our team can send you a
-                  revised quote.
+                  revised offer.
                 </p>
                 <div suppressHydrationWarning className="flex gap-2">
                   <button

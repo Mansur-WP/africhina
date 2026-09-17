@@ -10,21 +10,18 @@ export default function Sidebar({ user }) {
 
   const buyerLinks = [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/catalogue', label: 'Products' },
+    { href: '/orders', label: 'Orders' },
     { href: '/cart', label: 'Cart' },
-    { href: '/rfq', label: 'My Requests' },
-    { href: '/quotations', label: 'Quotations' },
-    { href: '/orders', label: 'My Orders' },
-    { href: '/notifications', label: 'Notifications' },
+    { href: '/rfq', label: 'Requests' },
     { href: '/support', label: 'Support' },
     { href: '/profile', label: 'Profile' },
   ];
 
   const adminLinks = [
     { href: '/admin', label: 'Dashboard' },
+    { href: '/admin/orders', label: 'Orders' },
     { href: '/admin/rfqs', label: 'Manage RFQs' },
     { href: '/admin/quotations', label: 'Quotations' },
-    { href: '/admin/orders', label: 'Orders' },
     { href: '/profile', label: 'Profile' },
   ];
 

@@ -57,6 +57,12 @@ export default function AppHeader({ user, showNotifications = true }) {
                   Dashboard
                 </Link>
                 <Link
+                  href="/admin/orders"
+                  className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
+                >
+                  Orders
+                </Link>
+                <Link
                   href="/admin/rfqs"
                   className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
                 >
@@ -68,18 +74,6 @@ export default function AppHeader({ user, showNotifications = true }) {
                 >
                   Quotations
                 </Link>
-                <Link
-                  href="/admin/orders"
-                  className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
-                >
-                  Orders
-                </Link>
-                <Link
-                  href="/admin/orders"
-                  className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
-                >
-                  Orders
-                </Link>
               </>
             ) : (
               <>
@@ -90,10 +84,10 @@ export default function AppHeader({ user, showNotifications = true }) {
                   Dashboard
                 </Link>
                 <Link
-                  href="/catalogue"
+                  href="/orders"
                   className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
                 >
-                  Products
+                  Orders
                 </Link>
                 <Link
                   href="/cart"
@@ -102,22 +96,16 @@ export default function AppHeader({ user, showNotifications = true }) {
                   Cart
                 </Link>
                 <Link
-                  href="/orders"
-                  className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
-                >
-                  Orders
-                </Link>
-                <Link
                   href="/rfq"
                   className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
                 >
-                  RFQs
+                  Requests
                 </Link>
                 <Link
-                  href="/quotations"
+                  href="/support"
                   className="text-xs font-semibold tracking-wider text-muted-foreground uppercase transition hover:text-foreground"
                 >
-                  Quotations
+                  Support
                 </Link>
               </>
             )}
@@ -141,6 +129,12 @@ export default function AppHeader({ user, showNotifications = true }) {
                   className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-foreground uppercase hover:bg-muted"
                 >
                   Dashboard
+                </Link>
+                <Link
+                  href="/admin/orders"
+                  className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
+                >
+                  Orders
                 </Link>
                 <Link
                   href="/admin/rfqs"
@@ -170,10 +164,10 @@ export default function AppHeader({ user, showNotifications = true }) {
                   Dashboard
                 </Link>
                 <Link
-                  href="/catalogue"
+                  href="/orders"
                   className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
                 >
-                  Products
+                  Orders
                 </Link>
                 <Link
                   href="/cart"
@@ -182,22 +176,10 @@ export default function AppHeader({ user, showNotifications = true }) {
                   Cart
                 </Link>
                 <Link
-                  href="/orders"
-                  className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
-                >
-                  Orders
-                </Link>
-                <Link
                   href="/rfq"
                   className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
                 >
-                  RFQs
-                </Link>
-                <Link
-                  href="/quotations"
-                  className="block rounded-xl px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:bg-muted"
-                >
-                  Quotations
+                  Requests
                 </Link>
                 <Link
                   href="/support"

@@ -228,6 +228,28 @@ export async function createOrderFromAcceptedQuotation(quotationId, buyerId) {
   return { quotation, order: toPublicOrder(order) };
 }
 
+export async function getCustomerOrderStats(buyerId) {
+  const where = { buyerId };
+  const [total, pendingPayment, active, delivered] = await Promise.all([
+    prisma.order.count({ where }),
+    prisma.order.count({
+      where: { buyerId, status: { in: ['pending_payment', 'draft'] } },
+    }),
+    prisma.order.count({
+      where: { buyerId, status: { in: ['paid', 'in_progress', 'shipped'] } },
+    }),
+    prisma.order.count({
+      where: { buyerId, status: 'delivered' },
+    }),
+  ]);
+  return {
+    total,
+    pendingPayment,
+    active,
+    delivered,
+  };
+}
+
 export async function listCustomerOrders(
   buyerId,
   { page = 1, limit = 20 } = {},

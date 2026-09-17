@@ -1,209 +1,465 @@
-import { getCurrentUser } from '@/src/infrastructure/auth/sessionManager.js';
-import AppShell from '@/components/AppShell.jsx';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import {
-  FileText,
   ShoppingBag,
+  CreditCard,
+  Package,
   Plus,
   ChevronRight,
   Clock,
-  Package,
+  CheckCircle2,
+  FileText,
+  Truck,
+  ArrowRight,
 } from 'lucide-react';
+import AppShell from '@/components/AppShell.jsx';
+import { getCurrentUser } from '@/src/infrastructure/auth/sessionManager.js';
+import {
+  listCustomerOrders,
+  getCustomerOrderStats,
+} from '@/src/application/orders/orderService.js';
 import { listMyRfqs } from '@/src/application/rfqs/rfqService.js';
+import { getCart } from '@/src/application/cart/cartService.js';
+import { formatMoney } from '@/src/shared/lib/money.js';
 
 export const metadata = {
-  title: 'Dashboard',
+  title: 'Dashboard — Africhina Connect',
 };
 
-const STATUS_COLORS = {
-  open: 'text-amber-700 bg-amber-50',
-  quoted: 'text-blue-700 bg-blue-50',
-  accepted: 'text-green-700 bg-green-50',
-  closed: 'text-gray-600 bg-gray-50',
+const ORDER_STATUS_CONFIG = {
+  pending_payment: {
+    label: 'Payment Required',
+    className:
+      'text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
+  },
+  draft: {
+    label: 'Draft Review',
+    className:
+      'text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
+  },
+  paid: {
+    label: 'Confirmed',
+    className:
+      'text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800',
+  },
+  in_progress: {
+    label: 'Preparing',
+    className:
+      'text-blue-700 bg-blue-50 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800',
+  },
+  shipped: {
+    label: 'Shipped',
+    className:
+      'text-indigo-700 bg-indigo-50 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800',
+  },
+  delivered: {
+    label: 'Delivered',
+    className:
+      'text-green-700 bg-green-50 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800',
+  },
+  cancelled: {
+    label: 'Cancelled',
+    className:
+      'text-gray-600 bg-gray-50 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
+  },
 };
+
+const RFQ_STATUS_CONFIG = {
+  open: {
+    label: 'Awaiting Quote',
+    className: 'text-amber-700 bg-amber-50 border-amber-200',
+  },
+  quoted: {
+    label: 'Offer Ready',
+    className: 'text-blue-700 bg-blue-50 border-blue-200',
+  },
+  accepted: {
+    label: 'Accepted',
+    className: 'text-green-700 bg-green-50 border-green-200',
+  },
+  closed: {
+    label: 'Closed',
+    className: 'text-gray-600 bg-gray-50 border-gray-200',
+  },
+};
+
+function formatDate(dateStr) {
+  try {
+    return new Intl.DateTimeFormat('en-NG', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date(dateStr));
+  } catch {
+    return dateStr;
+  }
+}
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
   if (user.role?.code !== 'buyer') redirect('/403');
 
-  // Fetch recent RFQs and count active ones
-  const { rfqs: recentRfqs, pagination } = await listMyRfqs(user.id, {
-    page: 1,
-    limit: 5,
-  });
+  const [orderStats, ordersData, rfqsData, cart] = await Promise.all([
+    getCustomerOrderStats(user.id),
+    listCustomerOrders(user.id, { page: 1, limit: 5 }),
+    listMyRfqs(user.id, { page: 1, limit: 4 }),
+    getCart(user.id).catch(() => ({ items: [] })),
+  ]);
 
-  const openCount = recentRfqs.filter((r) => r.status === 'open').length;
+  const recentOrders = ordersData.orders ?? [];
+  const recentRfqs = rfqsData.rfqs ?? [];
+  const cartItemCount = cart.items?.length ?? 0;
 
   return (
     <AppShell>
-      <div suppressHydrationWarning className="space-y-6">
-        {/* Welcome */}
+      <div suppressHydrationWarning className="space-y-8">
+        {/* Welcome Header */}
         <div suppressHydrationWarning className="border-b border-border pb-6">
           <h1 className="text-2xl font-bold text-foreground">
-            Welcome back, {user.name || 'Buyer'}
+            Welcome back, {user.name || 'Customer'}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Here is an overview of your sourcing activity.
+            Manage your orders, payments, and sourcing requests from one place.
           </p>
         </div>
 
         {/* Metric Cards */}
         <div
           suppressHydrationWarning
-          className="grid grid-cols-1 gap-4 sm:grid-cols-3"
+          className="grid grid-cols-2 gap-4 sm:grid-cols-4"
         >
-          {[
-            {
-              label: 'Active Requests',
-              value: String(openCount),
-              sub: 'Awaiting quotation',
-              href: '/rfq?status=open',
-            },
-            {
-              label: 'Total Requests',
-              value: String(pagination.total ?? 0),
-              sub: 'All-time sourcing requests',
-              href: '/rfq',
-            },
-            {
-              label: 'Open Orders',
-              value: '0',
-              sub: 'In production or shipping',
-              href: '/orders',
-            },
-          ].map((m) => (
-            <Link
-              key={m.label}
-              href={m.href}
-              suppressHydrationWarning
-              className="block rounded-lg border border-border bg-card p-5 transition hover:border-primary/40 hover:shadow-sm"
-            >
-              <span className="block text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                {m.label}
+          <Link
+            href="/orders"
+            className="group block rounded-xl border border-border bg-card p-5 transition hover:border-primary/40 hover:shadow-sm"
+          >
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span className="text-xs font-semibold tracking-wider uppercase">
+                Active Orders
               </span>
-              <span className="mt-2 block text-3xl font-bold text-foreground tabular-nums">
-                {m.value}
+              <Package size={16} className="text-muted-foreground/70" />
+            </div>
+            <span className="mt-3 block text-3xl font-extrabold text-foreground tabular-nums">
+              {orderStats.active}
+            </span>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              In progress or transit
+            </span>
+          </Link>
+
+          <Link
+            href="/orders"
+            className={`group block rounded-xl border p-5 transition hover:shadow-sm ${
+              orderStats.pendingPayment > 0
+                ? 'border-amber-300 bg-amber-50/40 hover:border-amber-400 dark:border-amber-800/60 dark:bg-amber-950/20'
+                : 'border-border bg-card hover:border-primary/40'
+            }`}
+          >
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span className="text-xs font-semibold tracking-wider uppercase">
+                Payment Required
               </span>
-              <span className="mt-1 block text-xs text-muted-foreground">
-                {m.sub}
+              <CreditCard
+                size={16}
+                className="text-amber-600 dark:text-amber-400"
+              />
+            </div>
+            <span className="mt-3 block text-3xl font-extrabold text-foreground tabular-nums">
+              {orderStats.pendingPayment}
+            </span>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Awaiting checkout
+            </span>
+          </Link>
+
+          <Link
+            href="/rfq"
+            className="group block rounded-xl border border-border bg-card p-5 transition hover:border-primary/40 hover:shadow-sm"
+          >
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span className="text-xs font-semibold tracking-wider uppercase">
+                Requests
               </span>
-            </Link>
-          ))}
+              <FileText size={16} className="text-muted-foreground/70" />
+            </div>
+            <span className="mt-3 block text-3xl font-extrabold text-foreground tabular-nums">
+              {rfqsData.pagination?.total ?? 0}
+            </span>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Custom sourcing
+            </span>
+          </Link>
+
+          <Link
+            href="/cart"
+            className="group block rounded-xl border border-border bg-card p-5 transition hover:border-primary/40 hover:shadow-sm"
+          >
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span className="text-xs font-semibold tracking-wider uppercase">
+                Cart Items
+              </span>
+              <ShoppingBag size={16} className="text-muted-foreground/70" />
+            </div>
+            <span className="mt-3 block text-3xl font-extrabold text-foreground tabular-nums">
+              {cartItemCount}
+            </span>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Ready for checkout
+            </span>
+          </Link>
         </div>
 
         {/* Quick Actions */}
         <div
           suppressHydrationWarning
-          className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-3"
         >
           <Link
-            href="/rfq/new"
-            className="flex items-center gap-3 rounded-xl border border-border bg-primary/5 px-5 py-4 transition hover:border-primary/30 hover:bg-primary/10"
+            href="/catalogue"
+            className="flex items-center gap-3.5 rounded-xl border border-border bg-card px-5 py-4 transition hover:border-primary/40 hover:shadow-sm"
           >
-            <div
-              suppressHydrationWarning
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"
-            >
-              <Plus size={18} />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Package size={20} />
             </div>
-            <div suppressHydrationWarning>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Browse Products
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Direct-sale products from China
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            href="/rfq/new"
+            className="flex items-center gap-3.5 rounded-xl border border-border bg-card px-5 py-4 transition hover:border-primary/40 hover:shadow-sm"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Plus size={20} />
+            </div>
+            <div>
               <p className="text-sm font-semibold text-foreground">
                 New Sourcing Request
               </p>
               <p className="text-xs text-muted-foreground">
-                Submit an RFQ for any product
+                Request custom product quotes
               </p>
             </div>
           </Link>
+
           <Link
-            href="/catalogue"
-            className="flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-4 transition hover:border-primary/40 hover:shadow-sm"
+            href="/orders"
+            className="flex items-center gap-3.5 rounded-xl border border-border bg-card px-5 py-4 transition hover:border-primary/40 hover:shadow-sm"
           >
-            <div
-              suppressHydrationWarning
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground"
-            >
-              <Package size={18} />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Truck size={20} />
             </div>
-            <div suppressHydrationWarning>
+            <div>
               <p className="text-sm font-semibold text-foreground">
-                Browse Catalogue
+                Track Orders
               </p>
               <p className="text-xs text-muted-foreground">
-                Discover products from China
+                View status & payment details
               </p>
             </div>
           </Link>
         </div>
 
-        {/* Recent RFQs */}
+        {/* Primary Section: Recent Orders */}
         <div
           suppressHydrationWarning
-          className="overflow-hidden rounded-xl border border-border bg-card"
+          className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
         >
-          <div
-            suppressHydrationWarning
-            className="flex items-center justify-between border-b border-border px-5 py-4"
-          >
-            <div
-              suppressHydrationWarning
-              className="flex items-center gap-2 text-sm font-semibold text-foreground"
-            >
-              <FileText size={16} className="text-muted-foreground" />
-              Recent Requests
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <div className="flex items-center gap-2">
+              <Package size={17} className="text-primary" />
+              <h2 className="text-base font-bold text-foreground">
+                Recent Orders
+              </h2>
             </div>
-            <Link href="/rfq" className="text-xs text-primary hover:underline">
-              View all →
+            <Link
+              href="/orders"
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              View all orders →
+            </Link>
+          </div>
+
+          {recentOrders.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 px-5 py-12 text-center">
+              <Package
+                size={36}
+                className="text-muted-foreground/40"
+                strokeWidth={1.5}
+              />
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  No orders placed yet
+                </p>
+                <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+                  Your direct-sale purchases and accepted sourcing offers will
+                  appear here for tracking and payment.
+                </p>
+              </div>
+              <Link
+                href="/catalogue"
+                className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+              >
+                Browse Products
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {recentOrders.map((order) => {
+                const statusMeta = ORDER_STATUS_CONFIG[order.status] ?? {
+                  label: order.status.replace('_', ' '),
+                  className: 'text-gray-600 bg-gray-50 border-gray-200',
+                };
+                const firstItemTitle =
+                  order.items[0]?.productTitle ||
+                  order.items[0]?.product?.title ||
+                  (order.purchaseMode === 'DIRECT_SALE'
+                    ? 'Direct sale order'
+                    : 'Custom sourcing order');
+                const itemCount = order.items.length;
+                const isPending =
+                  order.status === 'pending_payment' ||
+                  order.status === 'draft';
+
+                return (
+                  <div
+                    key={order.id}
+                    className="flex flex-col gap-3 px-5 py-4 transition hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-semibold text-foreground">
+                          {order.orderNumber}
+                        </span>
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold capitalize ${statusMeta.className}`}
+                        >
+                          {statusMeta.label}
+                        </span>
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                          {order.purchaseMode === 'DIRECT_SALE'
+                            ? 'Direct Purchase'
+                            : 'Sourcing Import'}
+                        </span>
+                      </div>
+                      <p className="mt-1 truncate text-sm font-medium text-foreground">
+                        {firstItemTitle}
+                        {itemCount > 1 ? ` + ${itemCount - 1} more` : ''}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Placed on {formatDate(order.createdAt)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 sm:justify-end">
+                      <div className="text-left sm:text-right">
+                        <p className="text-sm font-bold text-foreground tabular-nums">
+                          {formatMoney(order.totalAmount, order.currency)}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {itemCount} item{itemCount !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                      <Link
+                        href={
+                          isPending
+                            ? `/checkout/${order.id}`
+                            : `/orders/${order.id}`
+                        }
+                        className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          isPending
+                            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                            : 'border border-border bg-card text-foreground hover:bg-muted'
+                        }`}
+                      >
+                        <span>{isPending ? 'Pay Now' : 'View Order'}</span>
+                        <ChevronRight size={13} />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Secondary Section: Recent Sourcing Requests */}
+        <div
+          suppressHydrationWarning
+          className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+        >
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <div className="flex items-center gap-2">
+              <FileText size={17} className="text-muted-foreground" />
+              <h2 className="text-base font-bold text-foreground">
+                Sourcing Requests
+              </h2>
+            </div>
+            <Link
+              href="/rfq"
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              View all requests →
             </Link>
           </div>
 
           {recentRfqs.length === 0 ? (
-            <div
-              suppressHydrationWarning
-              className="flex flex-col items-center gap-3 px-5 py-10 text-center"
-            >
+            <div className="flex flex-col items-center gap-3 px-5 py-10 text-center">
               <FileText
                 size={32}
                 className="text-muted-foreground/30"
-                strokeWidth={1}
+                strokeWidth={1.5}
               />
               <p className="text-sm text-muted-foreground">
-                No sourcing requests yet.
+                No active sourcing requests.
               </p>
               <Link
                 href="/rfq/new"
                 className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
               >
-                <Plus size={12} /> Submit first request
+                <Plus size={12} /> Submit Request
               </Link>
             </div>
           ) : (
             <div className="divide-y divide-border">
               {recentRfqs.map((rfq) => {
+                const statusMeta = RFQ_STATUS_CONFIG[rfq.status] ?? {
+                  label: rfq.status,
+                  className: 'text-gray-600 bg-gray-50 border-gray-200',
+                };
                 const productTitle =
-                  rfq.item?.product?.title ?? rfq.title ?? 'Custom request';
+                  rfq.item?.product?.title ??
+                  rfq.title ??
+                  'Custom sourcing request';
                 const qty = rfq.item?.quantity;
+
                 return (
                   <Link
                     key={rfq.id}
                     href={`/rfq/${rfq.id}`}
-                    className="group flex items-center justify-between px-5 py-3.5 transition hover:bg-muted/40"
+                    className="group flex items-center justify-between px-5 py-3.5 transition hover:bg-muted/30"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {productTitle}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {productTitle}
+                        </p>
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusMeta.className}`}
+                        >
+                          {statusMeta.label}
+                        </span>
+                      </div>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         <span className="font-mono">{rfq.referenceNumber}</span>
                         {qty && <span> · Qty {qty.toLocaleString()}</span>}
-                        {' · '}
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[rfq.status] ?? ''}`}
-                        >
-                          {rfq.status}
-                        </span>
+                        <span> · {formatDate(rfq.createdAt)}</span>
                       </p>
                     </div>
                     <ChevronRight
