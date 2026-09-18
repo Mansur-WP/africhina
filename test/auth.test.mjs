@@ -105,8 +105,8 @@ describe('Server-side authorization policy', () => {
     assert.strictEqual(canAccessPath(buyer, '/logistics'), false);
   });
 
-  it('rejects customer access to support management routes', () => {
-    assert.strictEqual(canAccessPath(buyer, '/support'), false);
+  it('allows customer access to support page', () => {
+    assert.strictEqual(canAccessPath(buyer, '/support'), true);
   });
 
   it('allows admin access to admin routes', () => {
@@ -148,6 +148,7 @@ describe('Server-side authorization policy', () => {
   it('rejects wrong role on protected APIs', () => {
     assert.strictEqual(canAccessPath(buyer, '/api/v1/admin/users'), false);
     assert.strictEqual(canAccessPath(admin, '/api/v1/admin/users'), true);
+    assert.strictEqual(canAccessPath(buyer, '/api/v1/support/tickets'), false);
   });
 
   it('allows correct role on protected APIs', () => {

@@ -3,6 +3,10 @@ import { getCurrentUser } from '@/src/infrastructure/auth/sessionManager.js';
 import ProfileForm from '@/components/auth/ProfileForm.jsx';
 import AppShell from '@/components/AppShell.jsx';
 
+export const metadata = {
+  title: 'My Profile — Africhina Connect',
+};
+
 export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) {

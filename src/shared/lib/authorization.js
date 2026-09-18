@@ -141,7 +141,11 @@ export function getAuthorizationPolicy(pathname) {
       authRequired: true,
       allowRoles: ['logistics'],
     },
-    '/support': { type: 'page', authRequired: true, allowRoles: ['support'] },
+    '/support': {
+      type: 'page',
+      authRequired: true,
+      allowRoles: AUTHENTICATED_ROLES,
+    },
     '/profile': {
       type: 'page',
       authRequired: true,
