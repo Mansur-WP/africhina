@@ -129,7 +129,13 @@ function SourcingStepper({ status }) {
   );
 }
 
-function QuotationCard({ quotation, rfqId, onUpdate }) {
+function QuotationCard({
+  quotation,
+  rfqId,
+  rfqItem = null,
+  rfqTitle = null,
+  onUpdate,
+}) {
   const router = useRouter();
   const [acting, setActing] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -138,7 +144,25 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
   const isExpired =
     quotation.expiresAt && new Date(quotation.expiresAt) < new Date();
   const isSent = quotation.status === 'sent';
-  const canAct = isSent && !isExpired;
+
+  const totalAmount = quotation.total ?? quotation.price ?? 0;
+  const hasProductCost = Boolean(
+    quotation.productCost && quotation.productCost > 0,
+  );
+  const isFinancialDataReady = totalAmount > 0 && hasProductCost;
+  const canAct = isSent && !isExpired && isFinancialDataReady;
+
+  const productTitle = rfqItem?.product?.title || rfqTitle || 'Sourced Item';
+  const productCost = quotation.productCost ?? 0;
+  const chinaShipping = quotation.chinaShippingCost ?? 0;
+  const intlFreight = quotation.internationalFreightCost ?? 0;
+  const inspection = quotation.inspectionCost ?? 0;
+  const customs = quotation.customsCost ?? 0;
+  const serviceFee = quotation.serviceFee ?? 0;
+  // Group all shipping-related costs for customer presentation
+  const shippingAndLogistics = chinaShipping + inspection + intlFreight;
+  const hasShippingBreakdown =
+    [chinaShipping, inspection, intlFreight].filter((v) => v > 0).length > 1;
 
   async function handleAction(action) {
     setActing(true);
@@ -202,7 +226,9 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
                 ? 'bg-red-100 text-red-700'
                 : isExpired
                   ? 'bg-gray-100 text-gray-600'
-                  : 'bg-blue-100 text-blue-700'
+                  : !isFinancialDataReady
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-blue-100 text-blue-700'
           }`}
         >
           {quotation.status === 'accepted'
@@ -211,7 +237,9 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
               ? 'Declined'
               : quotation.status === 'sent' && isExpired
                 ? 'Expired'
-                : 'Active Offer'}
+                : !isFinancialDataReady
+                  ? 'Pricing Incomplete'
+                  : 'Active Offer'}
         </span>
       </div>
 
@@ -225,11 +253,19 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
             <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
               Total Sourcing Price
             </p>
-            <p className="mt-1 text-3xl font-bold text-foreground tabular-nums">
-              {formatMoney(quotation.price, quotation.currency)}
-            </p>
+            {isFinancialDataReady ? (
+              <p className="mt-1 text-3xl font-bold text-foreground tabular-nums">
+                {formatMoney(totalAmount, quotation.currency)}
+              </p>
+            ) : (
+              <p className="mt-1 text-xl font-bold text-amber-700">
+                Pricing Pending
+              </p>
+            )}
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Total price including procurement & shipping to destination
+              {isFinancialDataReady
+                ? 'Total price including procurement & shipping to destination'
+                : 'Offer incomplete — our sourcing team is reviewing supplier costs.'}
             </p>
           </div>
           <div suppressHydrationWarning className="text-right">
@@ -249,6 +285,136 @@ function QuotationCard({ quotation, rfqId, onUpdate }) {
             )}
           </div>
         </div>
+
+        {/* Financial Summary — simplified, customer-facing */}
+        {isFinancialDataReady ? (
+          <div
+            suppressHydrationWarning
+            className="rounded-lg border border-border bg-card/70 p-4"
+          >
+            <p className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+              Financial Summary
+            </p>
+            <div className="flex flex-col text-sm">
+              {/* Product */}
+              <div className="flex justify-between border-b border-border/50 py-2">
+                <span className="text-muted-foreground">Product</span>
+                <span className="font-medium text-foreground tabular-nums">
+                  {formatMoney(productCost, quotation.currency)}
+                </span>
+              </div>
+
+              {/* Shipping & Logistics — grouped, with optional breakdown */}
+              {shippingAndLogistics > 0 &&
+                (hasShippingBreakdown ? (
+                  <details
+                    suppressHydrationWarning
+                    className="group border-b border-border/50"
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between py-2 select-none">
+                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                        Shipping &amp; Logistics
+                        <span className="text-[10px] text-muted-foreground/50 group-open:hidden">
+                          ▸ breakdown
+                        </span>
+                        <span className="hidden text-[10px] text-muted-foreground/50 group-open:inline">
+                          ▾ hide
+                        </span>
+                      </span>
+                      <span className="font-medium text-foreground tabular-nums">
+                        {formatMoney(shippingAndLogistics, quotation.currency)}
+                      </span>
+                    </summary>
+                    <div className="mb-1.5 ml-0 flex flex-col border-l-2 border-border/40 pl-3">
+                      {chinaShipping > 0 && (
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-xs text-muted-foreground/70">
+                            China domestic shipping
+                          </span>
+                          <span className="text-xs text-muted-foreground tabular-nums">
+                            {formatMoney(chinaShipping, quotation.currency)}
+                          </span>
+                        </div>
+                      )}
+                      {inspection > 0 && (
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-xs text-muted-foreground/70">
+                            Inspection
+                          </span>
+                          <span className="text-xs text-muted-foreground tabular-nums">
+                            {formatMoney(inspection, quotation.currency)}
+                          </span>
+                        </div>
+                      )}
+                      {intlFreight > 0 && (
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-xs text-muted-foreground/70">
+                            International freight
+                          </span>
+                          <span className="text-xs text-muted-foreground tabular-nums">
+                            {formatMoney(intlFreight, quotation.currency)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                ) : (
+                  <div className="flex justify-between border-b border-border/50 py-2">
+                    <span className="text-muted-foreground">
+                      Shipping &amp; Logistics
+                    </span>
+                    <span className="font-medium text-foreground tabular-nums">
+                      {formatMoney(shippingAndLogistics, quotation.currency)}
+                    </span>
+                  </div>
+                ))}
+
+              {/* Customs & Clearance */}
+              {customs > 0 && (
+                <div className="flex justify-between border-b border-border/50 py-2">
+                  <span className="text-muted-foreground">
+                    Customs &amp; Clearance
+                  </span>
+                  <span className="font-medium text-foreground tabular-nums">
+                    {formatMoney(customs, quotation.currency)}
+                  </span>
+                </div>
+              )}
+
+              {/* Service Fee */}
+              {serviceFee > 0 && (
+                <div className="flex justify-between border-b border-border/50 py-2">
+                  <span className="text-muted-foreground">Service Fee</span>
+                  <span className="font-medium text-foreground tabular-nums">
+                    {formatMoney(serviceFee, quotation.currency)}
+                  </span>
+                </div>
+              )}
+
+              {/* Total — authoritative server-computed value (includes any otherCharges) */}
+              <div className="flex justify-between pt-3 font-bold text-foreground">
+                <span>Total</span>
+                <span className="tabular-nums">
+                  {formatMoney(totalAmount, quotation.currency)}
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          isSent && (
+            <div
+              suppressHydrationWarning
+              className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+            >
+              <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+              <span>
+                This offer is missing complete pricing details and is not yet
+                ready for acceptance. Please wait for our sourcing team to
+                finalize the quotation.
+              </span>
+            </div>
+          )
+        )}
 
         {/* Notes */}
         {quotation.notes && (
@@ -490,6 +656,8 @@ export default function RfqDetail({ rfq: initialRfq }) {
           key={activeQuotation.id}
           quotation={activeQuotation}
           rfqId={rfq.id}
+          rfqItem={item}
+          rfqTitle={rfq.title}
           onUpdate={refreshRfq}
         />
       )}
@@ -607,6 +775,8 @@ export default function RfqDetail({ rfq: initialRfq }) {
                 key={q.id}
                 quotation={q}
                 rfqId={rfq.id}
+                rfqItem={item}
+                rfqTitle={rfq.title}
                 onUpdate={refreshRfq}
               />
             ))}
