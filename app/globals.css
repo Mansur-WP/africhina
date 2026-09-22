@@ -1,0 +1,124 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/*
+ * Africhina Connect — Company Colors Design System (Navy & Gold)
+ */
+
+:root {
+  /* Warm off-white / ivory background */
+  --background-base: #faf9f6;
+  --background-subtle: #f3f1eb;
+  --surface-base: #ffffff;
+  --surface-muted: #f7f5f0;
+
+  /* Borders — very light gold-ish grey */
+  --border-base: #e6e2d8;
+  --border-strong: #d2c8b4;
+  --divider: #f0ebe0;
+
+  /* Typography */
+  --text-primary: #0c1b33; /* Deep Navy Blue */
+  --text-secondary: #5c667a; /* Muted Slate Navy */
+  --text-muted: #8fa0ba; /* Soft Blue-Grey */
+  --text-inverse: #ffffff;
+
+  /* Brand Colors */
+  --brand-primary: #0c1b33; /* Deep Navy Blue */
+  --brand-primary-hover: #081224;
+  --brand-primary-subtle: #eaedf2;
+  --brand-accent: #cfa13c; /* Metallic Gold */
+  --brand-accent-hover: #b58b2e;
+
+  /* Status */
+  --status-success: #16a34a;
+  --status-success-bg: #dcfce7;
+  --status-warning: #d97706;
+  --status-error: #dc2626;
+
+  /* Radii */
+  --radius: 0.5rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(12, 27, 51, 0.05);
+  --shadow-nav: 0 1px 0 0 rgba(12, 27, 51, 0.05);
+
+  /* Semantic mappings */
+  --background: var(--background-base);
+  --foreground: var(--text-primary);
+  --card: var(--surface-base);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface-base);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--brand-primary);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface-muted);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--background-subtle);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--background-subtle);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--status-error);
+  --destructive-foreground: #ffffff;
+  --border: var(--border-base);
+  --input: var(--border-base);
+  --ring: var(--brand-accent);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand-primary);
+  --color-brand-subtle: var(--brand-primary-subtle);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-hover: var(--brand-accent-hover);
+  --color-success: var(--status-success);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
